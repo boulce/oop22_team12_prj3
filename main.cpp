@@ -1,4 +1,6 @@
-/* Simple geometry viewer:  Left mouse: rotate;  Right mouse:   translate;  ESC to quit. */
+/* Simple geometry viewer:  Left mouse: rotate;  Right mouse:   translate;  ESC to quit.
+//////dgfdgddgsdfssd
+*/
 #include <assert.h>
 #include <math.h>
 #include <stdlib.h>
