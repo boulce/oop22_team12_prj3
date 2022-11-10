@@ -19,7 +19,7 @@ const int WALL_HIGHT=16;
 /*추가해야함
 int rotate_x=180, rotate_y=80;
 int choice=2;*/
-int rotate_x = 0, rotate_y = 0;
+int rotate_x = 180, rotate_y = 80;
 int choice = 1;
 
 GLfloat BoxVerts[][3] = { // 바닥의 꼭짓점 좌표, 일종의 단위벡터로 바닥크기를 바꾸려면 CWALL의 생성자를 바꿔라
@@ -434,13 +434,14 @@ void rotate(int id)
 
 void MotionCallback(int x, int y) { // 구현이 다름
 	int tdx = x - downX, tdy = 0, tdz = y - downY, id = choice - 1;
+	/*
 	if (leftButton) { //왼쪽마우스를 누르면 벽과 구를 회전, 여길 없애면 마우스 눌러서 화면전환 안할수 있음
 		rotate_x += x - downX;
 		rotate_y += y - downY;
 		for (i = 0; i < NO_SPHERE; i++) rotate(i);
 		rotate(WALL_ID);
-	}
-	else if (rightButton) { // 붉은공의 위치변경, 이부분을 잘 만지면 arkanoid에서 흰색공 위치 조절 가능
+	}*/
+	 if (rightButton) { // 붉은공의 위치변경, 이부분을 잘 만지면 arkanoid에서 흰색공 위치 조절 가능
 		if (id < NO_SPHERE) g_sphere[id].setCenter(g_sphere[id].center_x + tdx / 100.0, g_sphere[id].center_y + tdy / 100.0, g_sphere[id].center_z + tdz / 100.0);
 	}
 	downX = x;   downY = y;
@@ -452,6 +453,9 @@ void initRotate() { // 구현이 살짝 다름 initGL에서 호출
 	g_sphere[1].init();
 	g_sphere[2].init();
 	g_wall.init();
+
+	for (i = 0; i < NO_SPHERE; i++) rotate(i);
+	rotate(WALL_ID);
 }
 
 void InitGL() {
@@ -472,6 +476,10 @@ void InitGL() {
 	glLightfv(GL_LIGHT0, GL_POSITION, light0Position);
 	glEnable(GL_LIGHT0);
 	initRotate(); //구와 wall의 init호출
+
+
+
+
 
 	glShadeModel(GL_SMOOTH);
 	glEnable(GL_LIGHTING);
