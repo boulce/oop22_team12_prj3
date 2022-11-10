@@ -213,6 +213,8 @@ public:
 		}
 	}
 
+
+
 	void init() //initGL에서 initrotate를 호출하고 거기서 호출됨
 	{ // openGL에서 행렬은 mode를 지정한 후, transelate, rotate등의 변환을 거치는데, 일반적으로 변환을 한 후 LoadIdentity로 초기화를 해줘야 한다. 안그러면 누적되니까.. 근데 이 방법 말고도
 		//스택을 이용해서 현재 위치를 push로 저장한 후 변형을 한 후에 그냥 pop으로 받을수도 있다.
@@ -434,6 +436,7 @@ void rotate(int id)
 
 void MotionCallback(int x, int y) { // 구현이 다름
 	int tdx = x - downX, tdy = 0, tdz = y - downY, id = choice - 1;
+	
 	/*
 	if (leftButton) { //왼쪽마우스를 누르면 벽과 구를 회전, 여길 없애면 마우스 눌러서 화면전환 안할수 있음
 		rotate_x += x - downX;
@@ -449,12 +452,14 @@ void MotionCallback(int x, int y) { // 구현이 다름
 }
 
 void initRotate() { // 구현이 살짝 다름 initGL에서 호출
-	g_sphere[0].init();
-	g_sphere[1].init();
-	g_sphere[2].init();
+	
+	for (int i = 0; i < NO_SPHERE; i++) {
+		g_sphere[i].init();
+		rotate(i);
+	}
 	g_wall.init();
 
-	for (i = 0; i < NO_SPHERE; i++) rotate(i);
+	
 	rotate(WALL_ID);
 }
 
@@ -548,7 +553,7 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
 	float y = g_sphere[0].center_y;
 	float z = g_sphere[0].center_z;
 
-	if (space_flag) g_sphere[0].setCenter( 
+	if (space_flag) g_sphere[0].setCenter(
 		x + timeDelta * 0.002 * g_sphere[0].dir_x, // 해당구체의 속도, 0.002가 기본값, 
 		y + timeDelta * 0.002 * g_sphere[0].dir_y,
 		z + timeDelta * 0.002 * g_sphere[0].dir_z);
