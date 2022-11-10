@@ -1,28 +1,28 @@
-/* Simple geometry viewer:  Left mouse: rotate;  Right mouse:   translate;  ESC to quit. */
+ï»¿/* Simple geometry viewer:  Left mouse: rotate;  Right mouse:   translate;  ESC to quit. */
 #include <assert.h>
 #include <math.h>
 #include <stdlib.h>
-//Ãß°¡ÇØ¾ßÇÔ #include <iostream>
+//ì¶”ê°€í•´ì•¼í•¨ #include <iostream>
 #include <GL/glut.h>
 #include <iostream>
 // you may try "#include <GL/glut.h>" if "#include <GLUT/glut.h>" wouldn't work
 //#include <GL/glut.h>
 
 //GLdouble rotMatrix[4][16];
-//Ãß°¡ÇØ¾ßÇÔ const int NO_SPHERE = 17;
+//ì¶”ê°€í•´ì•¼í•¨ const int NO_SPHERE = 17;
 const int NO_SPHERE = 3;
 const int WALL_ID = 1000;
-/* Ãß°¡ÇØ¾ßÇÔ
+/* ì¶”ê°€í•´ì•¼í•¨
 const int WALL_WIDTH=16;
 const int WALL_HIGHT=16;
 */
-/*Ãß°¡ÇØ¾ßÇÔ
+/*ì¶”ê°€í•´ì•¼í•¨
 int rotate_x=180, rotate_y=80;
 int choice=2;*/
 int rotate_x = 0, rotate_y = 0;
 int choice = 1;
 
-GLfloat BoxVerts[][3] = { // ¹Ù´ÚÀÇ ²ÀÁþÁ¡ ÁÂÇ¥, ÀÏÁ¾ÀÇ ´ÜÀ§º¤ÅÍ·Î ¹Ù´ÚÅ©±â¸¦ ¹Ù²Ù·Á¸é CWALLÀÇ »ý¼ºÀÚ¸¦ ¹Ù²ã¶ó
+GLfloat BoxVerts[][3] = { // ë°”ë‹¥ì˜ ê¼­ì§“ì  ì¢Œí‘œ, ì¼ì¢…ì˜ ë‹¨ìœ„ë²¡í„°ë¡œ ë°”ë‹¥í¬ê¸°ë¥¼ ë°”ê¾¸ë ¤ë©´ CWALLì˜ ìƒì„±ìžë¥¼ ë°”ê¿”ë¼
 	{-1.0,-1.0,-1.0},
 	{-1.0,-1.0,1.0},
 	{-1.0,1.0,-1.0},
@@ -52,7 +52,7 @@ int cubeIndices[][4] = {
 };
 
 /* Viewer state */
-float sdepth = 20; //¸Ö¸®¼­º¸´ÂÁö °¡±îÀÌ¼­ º¸´ÂÁö
+float sdepth = 20; //ë©€ë¦¬ì„œë³´ëŠ”ì§€ ê°€ê¹Œì´ì„œ ë³´ëŠ”ì§€
 float zNear = 1.0, zFar = 100.0;
 float aspect = 5.0 / 4.0;
 float xcam = 0, ycam = 0;
@@ -67,7 +67,7 @@ void MyIdleFunc(void) { glutPostRedisplay(); } /* things to do while idle */
 void RunIdleFunc(void) { glutIdleFunc(MyIdleFunc); }
 void PauseIdleFunc(void) { glutIdleFunc(NULL); }
 void renderScene();
-/* Ãß°¡ÇØ¾ß ÇÔ
+/* ì¶”ê°€í•´ì•¼ í•¨
 void InitObjects();
 void auto_restart_game();
 void restart_game();
@@ -99,10 +99,10 @@ public:
 	void init()
 	{
 		glMatrixMode(GL_MODELVIEW);
-		glPushMatrix(); // ÇöÀç ¸ðµ¨ºä Çà·ÄÀ» ÀúÀå, ±×¸®°í ±× ¹ØÀ¸·Î ±×·ÁÁö´Â °Íµé¿¡ ´ëÇØ ÇöÀç ¸ðµ¨ºä Çà·ÄÀ» °¡Áö°í ´Ù½Ã ´©Àû½ÃÄÑ°¡¸é¼­ Ç¥Çö
-		glLoadIdentity(); // Çà·ÄÀ» ´ÜÀ§Çà·Ä·Î ÃÊ±âÈ­ÇÑ´Ù.
-		glGetDoublev(GL_MODELVIEW_MATRIX, m_mRotate); // ¸ÅÆ®¸¯½º Á¾·ù, °ªÀ» ¹ÞÀ» ¸ÅÆ®¸¯½º
-		glPopMatrix(); // ±×µ¿¾È ´©ÀûÇß´ø Çà·ÄÀ» ¾ø¾Ö°í pushÇÑ Çà·ÄÀ» ´Ù½Ã ºÒ·¯¿Â´Ù.
+		glPushMatrix(); // í˜„ìž¬ ëª¨ë¸ë·° í–‰ë ¬ì„ ì €ìž¥, ê·¸ë¦¬ê³  ê·¸ ë°‘ìœ¼ë¡œ ê·¸ë ¤ì§€ëŠ” ê²ƒë“¤ì— ëŒ€í•´ í˜„ìž¬ ëª¨ë¸ë·° í–‰ë ¬ì„ ê°€ì§€ê³  ë‹¤ì‹œ ëˆ„ì ì‹œì¼œê°€ë©´ì„œ í‘œí˜„
+		glLoadIdentity(); // í–‰ë ¬ì„ ë‹¨ìœ„í–‰ë ¬ë¡œ ì´ˆê¸°í™”í•œë‹¤.
+		glGetDoublev(GL_MODELVIEW_MATRIX, m_mRotate); // ë§¤íŠ¸ë¦­ìŠ¤ ì¢…ë¥˜, ê°’ì„ ë°›ì„ ë§¤íŠ¸ë¦­ìŠ¤
+		glPopMatrix(); // ê·¸ë™ì•ˆ ëˆ„ì í–ˆë˜ í–‰ë ¬ì„ ì—†ì• ê³  pushí•œ í–‰ë ¬ì„ ë‹¤ì‹œ ë¶ˆëŸ¬ì˜¨ë‹¤.
 	}
 
 	void setCenter(float x, float y, float z)
@@ -114,7 +114,7 @@ public:
 	{
 		color_r = r; color_g = g; color_b = b;
 	}
-	/*Ãß°¡ÇØ¾ßÇÔ 
+	/*ì¶”ê°€í•´ì•¼í•¨ 
 	bool hasIntersected(float x, float z)
 	{
 		float deltaX;
@@ -147,7 +147,7 @@ public:
 
 		//        if (deltaZ > 0)
 		//            hit_angle = M_PI + M_PI - hit_angle;
-				// µÎ ±¸°¡ ¼­·Î ³¢ÀÌ´Â °ÍÀ» ¹æÁö! ³¢ÀÌ¸é »ìÂ¦ ¸Õ °÷À¸·Î ¿òÁ÷ÀÌ´ø ±¸¸¦ ¿Å°ÜÁØ´Ù.
+				// ë‘ êµ¬ê°€ ì„œë¡œ ë¼ì´ëŠ” ê²ƒì„ ë°©ì§€! ë¼ì´ë©´ ì‚´ì§ ë¨¼ ê³³ìœ¼ë¡œ ì›€ì§ì´ë˜ êµ¬ë¥¼ ì˜®ê²¨ì¤€ë‹¤.
 		while (get_distance(this->center_x + 0.03 * 3 * dir_x, hitSphere.center_x, this->center_z + 0.03 * 3 * dir_z, hitSphere.center_z) < 0.85) {
 
 			temp = cos(hit_angle) * dir_x - sin(hit_angle) * dir_z;
@@ -169,17 +169,17 @@ public:
 	*/
 	void draw()
 	{
-		glLoadIdentity(); //´ÜÀ§Çà·Ä·Î ÃÊ±âÈ­
-		glTranslatef(0.0, 0.0, -sdepth); //+Z¹æÇâÀÌ È­¸é¿¡¼­ ¿ì¸®°¡ º¸´Â¹æÇâÀÌ¹Ç·Î -¸¦ÇÏ¸é Ãà¼ÒµÇ´Â È¿°ú, wall°ú À§»óÀ» ¸ÂÃß±âÀ§ÇØ »ç¿ëÇÑµí
-		glMultMatrixd(m_mRotate); // ¸¶¿ì½º ÀÌµ¿¿¡µû¶ó motionÄÝ¹éÇÔ¼ö¿¡¼­ m_mrotateÇà·ÄÀÌ º¯ÇüµÇ´Âµ¥ ÀÌ multÇÔ¼ö·Î ´ÜÀ§Çà·Ä¿¡ °öÇÏ¿© m_mrotate´ë·Î È¸ÀüÇÑ´Ù.
-		glTranslated(center_x, center_y, center_z); // Áß¾ÓÀ¸·Î ÀÌµ¿ÇÑ´Ù.
-		glColor3f(color_r, color_g, color_b); //»ö Á¶Á¤
-		//Ãß°¡ÇØ¾ßÇÔ glutSoilidSphere(0.4,20,16);
-		glutSolidSphere(0.5, 20, 16); //0.5ÀÇ ¹ÝÁö¸§ ³ª¸ÓÁö µÎ ÀÎÀÚ´Â ±¸¸¦ ³ªÅ¸³»´Â °æ¼±°ú À§¼±
+		glLoadIdentity(); //ë‹¨ìœ„í–‰ë ¬ë¡œ ì´ˆê¸°í™”
+		glTranslatef(0.0, 0.0, -sdepth); //+Zë°©í–¥ì´ í™”ë©´ì—ì„œ ìš°ë¦¬ê°€ ë³´ëŠ”ë°©í–¥ì´ë¯€ë¡œ -ë¥¼í•˜ë©´ ì¶•ì†Œë˜ëŠ” íš¨ê³¼, wallê³¼ ìœ„ìƒì„ ë§žì¶”ê¸°ìœ„í•´ ì‚¬ìš©í•œë“¯
+		glMultMatrixd(m_mRotate); // ë§ˆìš°ìŠ¤ ì´ë™ì—ë”°ë¼ motionì½œë°±í•¨ìˆ˜ì—ì„œ m_mrotateí–‰ë ¬ì´ ë³€í˜•ë˜ëŠ”ë° ì´ multí•¨ìˆ˜ë¡œ ë‹¨ìœ„í–‰ë ¬ì— ê³±í•˜ì—¬ m_mrotateëŒ€ë¡œ íšŒì „í•œë‹¤.
+		glTranslated(center_x, center_y, center_z); // ì¤‘ì•™ìœ¼ë¡œ ì´ë™í•œë‹¤.
+		glColor3f(color_r, color_g, color_b); //ìƒ‰ ì¡°ì •
+		//ì¶”ê°€í•´ì•¼í•¨ glutSoilidSphere(0.4,20,16);
+		glutSolidSphere(0.5, 20, 16); //0.5ì˜ ë°˜ì§€ë¦„ ë‚˜ë¨¸ì§€ ë‘ ì¸ìžëŠ” êµ¬ë¥¼ ë‚˜íƒ€ë‚´ëŠ” ê²½ì„ ê³¼ ìœ„ì„ 
 	}
 };
 
-class CWall // Ãß°¡ÇØ¾ßÇÔ CSphere¿¡¼­ »ó¼Ó
+class CWall // ì¶”ê°€í•´ì•¼í•¨ CSphereì—ì„œ ìƒì†
 {
 
 public:
@@ -208,18 +208,18 @@ public:
 				if (j == 0) coef = w / 2.0;
 				if (j == 1) coef = h / 2.0;
 				if (j == 2) coef = d / 2.0;
-				Verts[i][j] = coef * BoxVerts[i][j]; // BoxVerts´Â ÀÏÁ¾ÀÇ ´ÜÀ§º¤ÅÍ, coef´Â ÀÏÁ¾ÀÇ ´ÜÀ§º¤ÅÍ¿¡ °öÇØÁö´Â Å©±â
+				Verts[i][j] = coef * BoxVerts[i][j]; // BoxVertsëŠ” ì¼ì¢…ì˜ ë‹¨ìœ„ë²¡í„°, coefëŠ” ì¼ì¢…ì˜ ë‹¨ìœ„ë²¡í„°ì— ê³±í•´ì§€ëŠ” í¬ê¸°
 			}
 		}
 	}
 
-	void init() //initGL¿¡¼­ initrotate¸¦ È£ÃâÇÏ°í °Å±â¼­ È£ÃâµÊ
-	{ // openGL¿¡¼­ Çà·ÄÀº mode¸¦ ÁöÁ¤ÇÑ ÈÄ, transelate, rotateµîÀÇ º¯È¯À» °ÅÄ¡´Âµ¥, ÀÏ¹ÝÀûÀ¸·Î º¯È¯À» ÇÑ ÈÄ LoadIdentity·Î ÃÊ±âÈ­¸¦ ÇØÁà¾ß ÇÑ´Ù. ¾È±×·¯¸é ´©ÀûµÇ´Ï±î.. ±Ùµ¥ ÀÌ ¹æ¹ý ¸»°íµµ
-		//½ºÅÃÀ» ÀÌ¿ëÇØ¼­ ÇöÀç À§Ä¡¸¦ push·Î ÀúÀåÇÑ ÈÄ º¯ÇüÀ» ÇÑ ÈÄ¿¡ ±×³É popÀ¸·Î ¹ÞÀ»¼öµµ ÀÖ´Ù.
+	void init() //initGLì—ì„œ initrotateë¥¼ í˜¸ì¶œí•˜ê³  ê±°ê¸°ì„œ í˜¸ì¶œë¨
+	{ // openGLì—ì„œ í–‰ë ¬ì€ modeë¥¼ ì§€ì •í•œ í›„, transelate, rotateë“±ì˜ ë³€í™˜ì„ ê±°ì¹˜ëŠ”ë°, ì¼ë°˜ì ìœ¼ë¡œ ë³€í™˜ì„ í•œ í›„ LoadIdentityë¡œ ì´ˆê¸°í™”ë¥¼ í•´ì¤˜ì•¼ í•œë‹¤. ì•ˆê·¸ëŸ¬ë©´ ëˆ„ì ë˜ë‹ˆê¹Œ.. ê·¼ë° ì´ ë°©ë²• ë§ê³ ë„
+		//ìŠ¤íƒì„ ì´ìš©í•´ì„œ í˜„ìž¬ ìœ„ì¹˜ë¥¼ pushë¡œ ì €ìž¥í•œ í›„ ë³€í˜•ì„ í•œ í›„ì— ê·¸ëƒ¥ popìœ¼ë¡œ ë°›ì„ìˆ˜ë„ ìžˆë‹¤.
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
 		glLoadIdentity();
-		glGetDoublev(GL_MODELVIEW_MATRIX, m_mRotate); //¸ÅÆ®¸¯½º Á¾·ù, °ªÀ» ¹ÞÀ» ¸ÅÆ®¸¯½º, m_mRotate¿£ ´ÜÀ§Çà·ÄÀÌ µé¾î°¨
+		glGetDoublev(GL_MODELVIEW_MATRIX, m_mRotate); //ë§¤íŠ¸ë¦­ìŠ¤ ì¢…ë¥˜, ê°’ì„ ë°›ì„ ë§¤íŠ¸ë¦­ìŠ¤, m_mRotateì—” ë‹¨ìœ„í–‰ë ¬ì´ ë“¤ì–´ê°
 		glPopMatrix();
 	}
 
@@ -240,19 +240,19 @@ public:
 		color_r = r; color_g = g; color_b = b;
 	}
 
-	void draw() //display ÄÝ¹éÇÔ¼ö¿¡¼­ È£ÃâµÊ
+	void draw() //display ì½œë°±í•¨ìˆ˜ì—ì„œ í˜¸ì¶œë¨
 	{
 		glLoadIdentity();
-		glTranslatef(0.0, 0.0, -sdepth); //  ÀÌ Çà·ÄÀÌ ÇöÀçÀÇ ¸ðµ¨ºäÇà·Ä¿¡ °öÇØÁ®¼­ ÆòÇàÀÌµ¿À» ÇÑ´Ù.
-														//¸ðµ¨ºäÇà·Ä¿¡ 1 0 0 0.0
+		glTranslatef(0.0, 0.0, -sdepth); //  ì´ í–‰ë ¬ì´ í˜„ìž¬ì˜ ëª¨ë¸ë·°í–‰ë ¬ì— ê³±í•´ì ¸ì„œ í‰í–‰ì´ë™ì„ í•œë‹¤.
+														//ëª¨ë¸ë·°í–‰ë ¬ì— 1 0 0 0.0
 														//			   0 1 0 0.0
 														//			   0 0 1 -sdepth
-								//									   0 0 0   1  ÀÌ °öÇØÁö°Ô µÈ´Ù.
-						//È­¸é¿¡¼­ ¿ì¸®ÂÊÀÌ zº¤ÅÍ°¡ +°¡ µÇ´ÂÂÊÀÌ¹Ç·Î sdepth°¡ Ä¿Áú¼ö·Ï wallÀÌ ÀÛ¾ÆÁö´Â È¿°ú¸¦ ¾òÀ» ¼ö ÀÖ´Ù.
-		glMultMatrixd(m_mRotate); //ÇöÀç Çà·Ä¿¡ rotateÇà·ÄÀ»°öÇÑ´Ù. m_mRotate´Â motionÄÝ¹éÇÔ¼ö¿¡¼­ ¸¶¿ì½º ¿òÁ÷ÀÓ¿¡µû¶ó ¼³Á¤µÈ´Ù.
-		glTranslatef(center_x, center_y, center_z); //wallÀ» center_x,y,z¸¸Å­ÀÇ À§Ä¡·Î ÆòÇàÀÌµ¿
+								//									   0 0 0   1  ì´ ê³±í•´ì§€ê²Œ ëœë‹¤.
+						//í™”ë©´ì—ì„œ ìš°ë¦¬ìª½ì´ zë²¡í„°ê°€ +ê°€ ë˜ëŠ”ìª½ì´ë¯€ë¡œ sdepthê°€ ì»¤ì§ˆìˆ˜ë¡ wallì´ ìž‘ì•„ì§€ëŠ” íš¨ê³¼ë¥¼ ì–»ì„ ìˆ˜ ìžˆë‹¤.
+		glMultMatrixd(m_mRotate); //í˜„ìž¬ í–‰ë ¬ì— rotateí–‰ë ¬ì„ê³±í•œë‹¤. m_mRotateëŠ” motionì½œë°±í•¨ìˆ˜ì—ì„œ ë§ˆìš°ìŠ¤ ì›€ì§ìž„ì—ë”°ë¼ ì„¤ì •ëœë‹¤.
+		glTranslatef(center_x, center_y, center_z); //wallì„ center_x,y,zë§Œí¼ì˜ ìœ„ì¹˜ë¡œ í‰í–‰ì´ë™
 
-		glColor3f(color_r, color_g, color_b); //»ö ¼³Á¤
+		glColor3f(color_r, color_g, color_b); //ìƒ‰ ì„¤ì •
 
 		int i;
 		int v1, v2, v3, v4;
@@ -263,7 +263,7 @@ public:
 			v3 = cubeIndices[i][2];
 			v4 = cubeIndices[i][3];
 
-			glBegin(GL_QUADS); //glbeginÀº µµÇüÀ» ±×¸®±â ½ÃÀÛÇß´Ù´Â ¶æ
+			glBegin(GL_QUADS); //glbeginì€ ë„í˜•ì„ ê·¸ë¦¬ê¸° ì‹œìž‘í–ˆë‹¤ëŠ” ëœ»
 			glNormal3f(bNorms[i][0], bNorms[i][1], bNorms[i][2]);
 			glVertex3f(Verts[v1][0], Verts[v1][1], Verts[v1][2]);
 			glNormal3f(bNorms[i][0], bNorms[i][1], bNorms[i][2]);
@@ -272,10 +272,10 @@ public:
 			glVertex3f(Verts[v3][0], Verts[v3][1], Verts[v3][2]);
 			glNormal3f(bNorms[i][0], bNorms[i][1], bNorms[i][2]);
 			glVertex3f(Verts[v4][0], Verts[v4][1], Verts[v4][2]);
-			glEnd(); //glbegin°ú ¸¶Âù°¡Áö·Î µµÇü±×¸®±â ³¡
+			glEnd(); //glbeginê³¼ ë§ˆì°¬ê°€ì§€ë¡œ ë„í˜•ê·¸ë¦¬ê¸° ë
 		}
 	}
-	/*Ãß°¡ÇØ¾ßÇÔ 
+	/*ì¶”ê°€í•´ì•¼í•¨ 
 	bool hasUpIntersected(CSphere* sphere)
 	{
 		if (sphere->center_z + 0.425 >= WALL_HIGHT / 2)
@@ -306,7 +306,7 @@ public:
 };
 
 
-/*Ãß°¡ÇØ¾ßÇÔ 
+/*ì¶”ê°€í•´ì•¼í•¨ 
 CSphere g_sphere[NO_SPHERE];
 CWall g_wall(WALL_WIDTH, 0.2, WALL_HIGHT);
 */
@@ -325,30 +325,30 @@ void ReshapeCallback(int width, int height)
 	ysize = height;
 	aspect = (float)xsize / (float)ysize;
 
-	glViewport(0, 0, xsize, ysize); //Ã³À½ »ý¼ºµÇ´Â À©µµ¿ì´Â InitGLÀÇ glutInitWindowsize¿¡¼­ °áÁ¤µÇÁö¸¸ ½ÇÇàµÇ´Â ÇÁ·Î±×·¥ ÀÚÃ¼´Â ¿©±â ÀÌ ÇÔ¼öÀÇ ÇØ»óµµ¿¡ µû¶ó Á¶ÀýµÈ´Ù. ¹º¼Ò¸°°¡ ½ÍÀ¸¸é
-									// °¢°¢ 1920,1080À¸·Î ½ÇÇàÇØ º¸¸é ¾Ë±â½¬¿ïµí
-	glMatrixMode(GL_PROJECTION); //openGLÀº ¸ðµ¨¸µÀ» GL_MODELVIEW, GL_PROJECTION, GL_TEXTURE 3°³ÀÇ Çà·Ä·Î È­¸é¿¡Ç¥½ÃÇÑ´Ù. ¸¸¾à (1,1,1)¿¡ ¹» ±×¸°´Ù¸é ÇØ´ç ÁÂÇ¥´Â GL_MODELVIEW ¸ÅÆ®¸¯½º¸¦
-								// °öÇØ¼­ ½ÇÁ¦ÀûÀÎ À§Ä¡¸¦ ÁöÁ¤ÇÑ´Ù. µû¶ó¼­ ³»ºÎÀûÀÎ À§Ä¡Á¤º¸´Â ÇÏ³ª´õ¶óµµ GL_MODELVIEW ¸ÅÆ®¸¯½º°¡ º¯°æµÈ´Ù¸é ÀüÇô ´Ù¸¥ À§Ä¡¿¡ ±×·ÁÁø´Ù. ÀÌ·¸°Ô ±×·ÁÁø ¸ðµ¨Àº
-									//GL_PROJECTION Çà·Ä°ú °öÇØÁ® È­¸é»ó¿¡ Åõ¿µµÈ´Ù. Áï GL_MODELVIEW°¡ ¸ðµ¨¸µ¿¡ ´ëÇÑ ½ÇÁ¸ À§Ä¡¶ó¸é GL_PROJECTIONÀº ÇØ´ç ¸ðµ¨¸µÀ» ÃÖÁ¾ÀûÀ¸·Î ¾î¶»°Ô Ç¥½ÃÇÒÁö °áÁ¤ÇÑ´Ù.
+	glViewport(0, 0, xsize, ysize); //ì²˜ìŒ ìƒì„±ë˜ëŠ” ìœˆë„ìš°ëŠ” InitGLì˜ glutInitWindowsizeì—ì„œ ê²°ì •ë˜ì§€ë§Œ ì‹¤í–‰ë˜ëŠ” í”„ë¡œê·¸ëž¨ ìžì²´ëŠ” ì—¬ê¸° ì´ í•¨ìˆ˜ì˜ í•´ìƒë„ì— ë”°ë¼ ì¡°ì ˆëœë‹¤. ë­”ì†Œë¦°ê°€ ì‹¶ìœ¼ë©´
+									// ê°ê° 1920,1080ìœ¼ë¡œ ì‹¤í–‰í•´ ë³´ë©´ ì•Œê¸°ì‰¬ìš¸ë“¯
+	glMatrixMode(GL_PROJECTION); //openGLì€ ëª¨ë¸ë§ì„ GL_MODELVIEW, GL_PROJECTION, GL_TEXTURE 3ê°œì˜ í–‰ë ¬ë¡œ í™”ë©´ì—í‘œì‹œí•œë‹¤. ë§Œì•½ (1,1,1)ì— ë­˜ ê·¸ë¦°ë‹¤ë©´ í•´ë‹¹ ì¢Œí‘œëŠ” GL_MODELVIEW ë§¤íŠ¸ë¦­ìŠ¤ë¥¼
+								// ê³±í•´ì„œ ì‹¤ì œì ì¸ ìœ„ì¹˜ë¥¼ ì§€ì •í•œë‹¤. ë”°ë¼ì„œ ë‚´ë¶€ì ì¸ ìœ„ì¹˜ì •ë³´ëŠ” í•˜ë‚˜ë”ë¼ë„ GL_MODELVIEW ë§¤íŠ¸ë¦­ìŠ¤ê°€ ë³€ê²½ëœë‹¤ë©´ ì „í˜€ ë‹¤ë¥¸ ìœ„ì¹˜ì— ê·¸ë ¤ì§„ë‹¤. ì´ë ‡ê²Œ ê·¸ë ¤ì§„ ëª¨ë¸ì€
+									//GL_PROJECTION í–‰ë ¬ê³¼ ê³±í•´ì ¸ í™”ë©´ìƒì— íˆ¬ì˜ëœë‹¤. ì¦‰ GL_MODELVIEWê°€ ëª¨ë¸ë§ì— ëŒ€í•œ ì‹¤ì¡´ ìœ„ì¹˜ë¼ë©´ GL_PROJECTIONì€ í•´ë‹¹ ëª¨ë¸ë§ì„ ìµœì¢…ì ìœ¼ë¡œ ì–´ë–»ê²Œ í‘œì‹œí• ì§€ ê²°ì •í•œë‹¤.
 	
 	/*
-	GL_MODELVIEW¿¡ °üÇØ: Æ¯Á¤ÁÂÇ¥¿¡ µµÇüÀ» ±×¸°´Ù¸é GL_MODELVIEW¸¦ °öÇØ ½ÇÁ¦ÀûÀÎ À§Ä¡¸¦ ÁöÁ¤, ¸¸¾à ÀÌ°Ô º¯°æµÈ´Ù¸é ÀüÇô´Ù¸¥ ÁÂÇ¥¿¡ ±×·ÁÁü
-	glTranslatef, glScalef, glRotatefµîÀ» ÅëÇØ ¹°Ã¼ÀÇ À§Ä¡¸¦ º¯È¯ ¶Ç´Â Á¦¾îÇÔ ÀÌ¸¦ ¸ðµ¨¸µ º¯È¯ ÀÌ¶ó°í ÇÔ,¸ðµ¨ºäÇà·ÄÀÌ¶õ ÁÂÇ¥°è º¯È¯À» ÅëÇØ ¹°Ã¼ÀÇ À§Ä¡¿Í ¹æÇâÀ» °áÁ¤ÇÏ±â À§ÇÑ
-	4x4Çà·Ä°¢ ¹öÅØ½ºµéÀº ÇÏ³ªÀÇ ¿­·Î ±¸¼ºµÈ Çà·Ä·Î ¸¸µé¾îÁ®¼­ ¸ðµ¨ºäÇà·Ä°ú °öÇØÁü
+	GL_MODELVIEWì— ê´€í•´: íŠ¹ì •ì¢Œí‘œì— ë„í˜•ì„ ê·¸ë¦°ë‹¤ë©´ GL_MODELVIEWë¥¼ ê³±í•´ ì‹¤ì œì ì¸ ìœ„ì¹˜ë¥¼ ì§€ì •, ë§Œì•½ ì´ê²Œ ë³€ê²½ëœë‹¤ë©´ ì „í˜€ë‹¤ë¥¸ ì¢Œí‘œì— ê·¸ë ¤ì§
+	glTranslatef, glScalef, glRotatefë“±ì„ í†µí•´ ë¬¼ì²´ì˜ ìœ„ì¹˜ë¥¼ ë³€í™˜ ë˜ëŠ” ì œì–´í•¨ ì´ë¥¼ ëª¨ë¸ë§ ë³€í™˜ ì´ë¼ê³  í•¨,ëª¨ë¸ë·°í–‰ë ¬ì´ëž€ ì¢Œí‘œê³„ ë³€í™˜ì„ í†µí•´ ë¬¼ì²´ì˜ ìœ„ì¹˜ì™€ ë°©í–¥ì„ ê²°ì •í•˜ê¸° ìœ„í•œ
+	4x4í–‰ë ¬ê° ë²„í…ìŠ¤ë“¤ì€ í•˜ë‚˜ì˜ ì—´ë¡œ êµ¬ì„±ëœ í–‰ë ¬ë¡œ ë§Œë“¤ì–´ì ¸ì„œ ëª¨ë¸ë·°í–‰ë ¬ê³¼ ê³±í•´ì§
 
-	GL_PROJECTION¿¡ °üÇØ: GL_MODELVIEW°¡ ±×·ÁÁø µµÇüÀÇ À§Ä¡¶ó¸é µµÇüÀº GL_PROJECTIONÀÇ Çà·Ä°ú °öÇØÁ® ÃÖÁ¾ÀûÀ¸·Î ¾î¶»°Ô È­¸é¿¡ »Ñ¸±°ÍÀÎ°¡¸¦ °è»êÇÑ´Ù.
-	Á÷±³Åõ¿µ glOrtho ¿ø±ÙÅõ¿µ gluPerspectivef
+	GL_PROJECTIONì— ê´€í•´: GL_MODELVIEWê°€ ê·¸ë ¤ì§„ ë„í˜•ì˜ ìœ„ì¹˜ë¼ë©´ ë„í˜•ì€ GL_PROJECTIONì˜ í–‰ë ¬ê³¼ ê³±í•´ì ¸ ìµœì¢…ì ìœ¼ë¡œ ì–´ë–»ê²Œ í™”ë©´ì— ë¿Œë¦´ê²ƒì¸ê°€ë¥¼ ê³„ì‚°í•œë‹¤.
+	ì§êµíˆ¬ì˜ glOrtho ì›ê·¼íˆ¬ì˜ gluPerspectivef
 	
 	
 	*/
 	
 	
-	glLoadIdentity(); // ´ÜÀ§Çà·Ä·Î ÃÊ±âÈ­ÇÑ´Ù.
-	gluPerspective(64.0, aspect, zNear, zFar); //¿ø±ÙÅõ¿µ
+	glLoadIdentity(); // ë‹¨ìœ„í–‰ë ¬ë¡œ ì´ˆê¸°í™”í•œë‹¤.
+	gluPerspective(64.0, aspect, zNear, zFar); //ì›ê·¼íˆ¬ì˜
 	
 	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity(); // ´ÜÀ§Çà·Ä·Î ÃÊ±âÈ­ÇÑ´Ù.	ÀÌÀü¿¡ Àû¿ëÇß´ø È¸Àü°ªÀ» ¹«½ÃÇÏ°í ´Ù½Ã ¼³Á¤ÇÏ±âÀ§ÇØ ¸®¼ÂÀ» ÇØ¾ßÇÑ´Ù. ÀÌ ÄÚµå°¡ ¾øÀ¸¸é È¸ÀüÀÌ °è¼Ó ´©ÀûÀû¿ëµÈ´Ù.
-						//ÀÌ¿Í°°ÀÌ glMatrixMode(GL_MODELVIEW)ÀÌÈÄ¿¡ glLoadIdentity()°¡ ³ª¿À´Â°Ô ÀÌ·¯ÇÑ ÀÌÀ¯ÀÌ´Ù.
+	glLoadIdentity(); // ë‹¨ìœ„í–‰ë ¬ë¡œ ì´ˆê¸°í™”í•œë‹¤.	ì´ì „ì— ì ìš©í–ˆë˜ íšŒì „ê°’ì„ ë¬´ì‹œí•˜ê³  ë‹¤ì‹œ ì„¤ì •í•˜ê¸°ìœ„í•´ ë¦¬ì…‹ì„ í•´ì•¼í•œë‹¤. ì´ ì½”ë“œê°€ ì—†ìœ¼ë©´ íšŒì „ì´ ê³„ì† ëˆ„ì ì ìš©ëœë‹¤.
+						//ì´ì™€ê°™ì´ glMatrixMode(GL_MODELVIEW)ì´í›„ì— glLoadIdentity()ê°€ ë‚˜ì˜¤ëŠ”ê²Œ ì´ëŸ¬í•œ ì´ìœ ì´ë‹¤.
 
 	glutPostRedisplay();
 }
@@ -357,22 +357,22 @@ void ReshapeCallback(int width, int height)
 
 void DisplayCallback(void)
 {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //glclear´Â ¹öÆÛµéÀ» ¹Ì¸®¼³Á¤µÈ °ªÀ¸·Î ¹Ù²Û´Ù.	
-														//GL_COLOR_BUFFER_BIT´Â initglÀÇ glclearcolor¿¡¼­ ¼³Á¤µÈ °ªÀÌ´Ù. 
-														//ÇÑÆí 3Â÷¿øÀ» 2Â÷¿ø¿¡ ±×¸®±âÀ§ÇØ depth¶ó´Â °³³äÀÌ ÀÖ´Ù. °°Àº x,y¶óµµ depthÂ÷ÀÌ¿¡ µû¶ó ±×·ÁÁö°í ¸»°í°¡ Á¤ÇØÁø´Ù.
-														//ÀÌ ÁÙ ÀÚÃ¼°¡ ÇÏ³ªÀÇ °ü¿ë±¸ ºñ½ÁÇÏ°Ô ¾²ÀÌ´Âµ¥, 3Â÷¿ø±×¸² ÀüÃ¼¸¦ Áö¿ì´Â ¿ªÇÒÀ» ÇÑ´Ù.
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //glclearëŠ” ë²„í¼ë“¤ì„ ë¯¸ë¦¬ì„¤ì •ëœ ê°’ìœ¼ë¡œ ë°”ê¾¼ë‹¤.	
+														//GL_COLOR_BUFFER_BITëŠ” initglì˜ glclearcolorì—ì„œ ì„¤ì •ëœ ê°’ì´ë‹¤. 
+														//í•œíŽ¸ 3ì°¨ì›ì„ 2ì°¨ì›ì— ê·¸ë¦¬ê¸°ìœ„í•´ depthë¼ëŠ” ê°œë…ì´ ìžˆë‹¤. ê°™ì€ x,yë¼ë„ depthì°¨ì´ì— ë”°ë¼ ê·¸ë ¤ì§€ê³  ë§ê³ ê°€ ì •í•´ì§„ë‹¤.
+														//ì´ ì¤„ ìžì²´ê°€ í•˜ë‚˜ì˜ ê´€ìš©êµ¬ ë¹„ìŠ·í•˜ê²Œ ì“°ì´ëŠ”ë°, 3ì°¨ì›ê·¸ë¦¼ ì „ì²´ë¥¼ ì§€ìš°ëŠ” ì—­í• ì„ í•œë‹¤.
 	glMatrixMode(GL_MODELVIEW); 
 
 
 
-	for (i = 0; i < NO_SPHERE; i++) g_sphere[i].draw(); //°ø ±×¸®±â
-	g_wall.draw(); // º® ±×¸®±â
+	for (i = 0; i < NO_SPHERE; i++) g_sphere[i].draw(); //ê³µ ê·¸ë¦¬ê¸°
+	g_wall.draw(); // ë²½ ê·¸ë¦¬ê¸°
 
 	
 	
-	glutSwapBuffers(); // front¹öÆÛ¿Í back¹öÆÛ¸¦ swapping ÇÏ±â À§ÇÑ°Í, ÇÁ·ÐÆ®¹öÆÛ³»¿ëÀÌ È­¸é¿¡ »Ñ·ÁÁö´Â µ¿¾È »õ·Î¿î ³»¿ëÀÌ ¹é¹öÆÛ¿¡ ¾²ÀÌ°í ¹é¹öÆÛ¿¡ ±â·ÏÀÌ ´Ù µÇ¸é ÇÁ·ÐÆ®¿Í ¹éÀÌ ¹Ù²ï´Ù.
-						//¹é¹öÆÛ¿¡ ±×¸²À» ´Ù ±×·ÈÀ¸¸é Àü¸é¹öÆÛ¿Í ÅëÂ°·Î ±³Ã¼ÇÑ´Ù. Àü¸é°ú ÈÄ¸éÀÌ ÀÏ½Ã¿¡ ±³Ã¼µÇ¹Ç·Î ¹é¹öÆÛ¿¡ ¹Ì¸® ÁØºñÇØµÐ ±×¸²ÀÌ ³ªÅ¸³­´Ù.
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); »©µµ »ó°ü¾ø´Âµí?
+	glutSwapBuffers(); // frontë²„í¼ì™€ backë²„í¼ë¥¼ swapping í•˜ê¸° ìœ„í•œê²ƒ, í”„ë¡ íŠ¸ë²„í¼ë‚´ìš©ì´ í™”ë©´ì— ë¿Œë ¤ì§€ëŠ” ë™ì•ˆ ìƒˆë¡œìš´ ë‚´ìš©ì´ ë°±ë²„í¼ì— ì“°ì´ê³  ë°±ë²„í¼ì— ê¸°ë¡ì´ ë‹¤ ë˜ë©´ í”„ë¡ íŠ¸ì™€ ë°±ì´ ë°”ë€ë‹¤.
+						//ë°±ë²„í¼ì— ê·¸ë¦¼ì„ ë‹¤ ê·¸ë ¸ìœ¼ë©´ ì „ë©´ë²„í¼ì™€ í†µì§¸ë¡œ êµì²´í•œë‹¤. ì „ë©´ê³¼ í›„ë©´ì´ ì¼ì‹œì— êµì²´ë˜ë¯€ë¡œ ë°±ë²„í¼ì— ë¯¸ë¦¬ ì¤€ë¹„í•´ë‘” ê·¸ë¦¼ì´ ë‚˜íƒ€ë‚œë‹¤.
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); ë¹¼ë„ ìƒê´€ì—†ëŠ”ë“¯?
 }
 
 int space_flag = 0;
@@ -385,17 +385,17 @@ void KeyboardCallback(unsigned char ch, int x, int y)
 	case '2': choice = 2; break;
 	case '3': choice = 3; break;
 
-	case 32: //½ºÆäÀÌ½º¹Ù
+	case 32: //ìŠ¤íŽ˜ì´ìŠ¤ë°”
 		if (space_flag) space_flag = 0;
 		else {
 			space_flag = 1;
-			g_sphere[0].dir_x = g_sphere[2].center_x - g_sphere[0].center_x; //sphere[0]Àº ½ºÆäÀÌ½º¸¦ ´©¸£¸é ¿òÁ÷ÀÌ´Â »¡°£ °ø
+			g_sphere[0].dir_x = g_sphere[2].center_x - g_sphere[0].center_x; //sphere[0]ì€ ìŠ¤íŽ˜ì´ìŠ¤ë¥¼ ëˆ„ë¥´ë©´ ì›€ì§ì´ëŠ” ë¹¨ê°„ ê³µ
 			g_sphere[0].dir_y = g_sphere[2].center_y - g_sphere[0].center_y;
 			g_sphere[0].dir_z = g_sphere[2].center_z - g_sphere[0].center_z;
 		}
 		break; // SPACE_KEY
 
-	case 27: //ESCÅ°
+	case 27: //ESCí‚¤
 		exit(0);
 		break;
 	}
@@ -403,7 +403,7 @@ void KeyboardCallback(unsigned char ch, int x, int y)
 }
 
 void MouseCallback(int button, int state, int x, int y)
-{ // GLUT_DOWN=¸¶¿ì½º¸¦ ´©¸£°í ÀÖ´Â »óÅÂ, LEFT,RIGHT,MIDDLE °¢°¢ ¿ÞÂÊ ¿À¸¥ÂÊ ÈÙ ÀÌ·±°Å
+{ // GLUT_DOWN=ë§ˆìš°ìŠ¤ë¥¼ ëˆ„ë¥´ê³  ìžˆëŠ” ìƒíƒœ, LEFT,RIGHT,MIDDLE ê°ê° ì™¼ìª½ ì˜¤ë¥¸ìª½ íœ  ì´ëŸ°ê±°
 	downX = x; downY = y;
 	leftButton = ((button == GLUT_LEFT_BUTTON) && (state == GLUT_DOWN));
 	middleButton = ((button == GLUT_MIDDLE_BUTTON) && (state == GLUT_DOWN));
@@ -413,15 +413,15 @@ void MouseCallback(int button, int state, int x, int y)
 
 void rotate(int id)
 {
-	glMatrixMode(GL_MODELVIEW); //¸ðµ¨ºä ¸ðµå·Î »ç¿ëÇÏ°Ú´Ù.
-	glPushMatrix(); // ÇöÀç Çà·Ä ÀúÀå
-	glLoadIdentity(); // ´ÜÀ§Çà·Ä·Î ÃÊ±âÈ­ (À§ÀÇ ÇöÀçÇà·Ä°ú ´Ù¸§)
+	glMatrixMode(GL_MODELVIEW); //ëª¨ë¸ë·° ëª¨ë“œë¡œ ì‚¬ìš©í•˜ê² ë‹¤.
+	glPushMatrix(); // í˜„ìž¬ í–‰ë ¬ ì €ìž¥
+	glLoadIdentity(); // ë‹¨ìœ„í–‰ë ¬ë¡œ ì´ˆê¸°í™” (ìœ„ì˜ í˜„ìž¬í–‰ë ¬ê³¼ ë‹¤ë¦„)
 
-	glRotated(((double)rotate_y), 1.0, 0.0, 0.0); //´ÜÀ§Çà·Ä·Î ÃÊ±âÈ­µÈ°É rotate¿¬»ê
-	glRotated(((double)rotate_x), 0.0, 1.0, 0.0); // ¸¶Âù°¡Áö
+	glRotated(((double)rotate_y), 1.0, 0.0, 0.0); //ë‹¨ìœ„í–‰ë ¬ë¡œ ì´ˆê¸°í™”ëœê±¸ rotateì—°ì‚°
+	glRotated(((double)rotate_x), 0.0, 1.0, 0.0); // ë§ˆì°¬ê°€ì§€
 
 	if (id < NO_SPHERE) {
-		glGetDoublev(GL_MODELVIEW_MATRIX, g_sphere[id].m_mRotate); //¸ÅÆ®¸¯½º Á¾·ù, °ªÀ» ¹ÞÀ» ¸ÞÆ®¸¯½º, Áï modelview_matrixÁ¾·ùÀÇ g_sphere...¿¡ ¹Ù·Î À§¿¡¼­ rotateÇÑ Çà·ÄÀ» ¹Þ¾Æ¿À°Ú´Ù. 
+		glGetDoublev(GL_MODELVIEW_MATRIX, g_sphere[id].m_mRotate); //ë§¤íŠ¸ë¦­ìŠ¤ ì¢…ë¥˜, ê°’ì„ ë°›ì„ ë©”íŠ¸ë¦­ìŠ¤, ì¦‰ modelview_matrixì¢…ë¥˜ì˜ g_sphere...ì— ë°”ë¡œ ìœ„ì—ì„œ rotateí•œ í–‰ë ¬ì„ ë°›ì•„ì˜¤ê² ë‹¤. 
 	}
 
 	if (id == WALL_ID) {
@@ -430,24 +430,24 @@ void rotate(int id)
 	glPopMatrix();
 }
 
-//Ãß°¡ÇØ¾ßÇÔ int k=0;
+//ì¶”ê°€í•´ì•¼í•¨ int k=0;
 
-void MotionCallback(int x, int y) { // ±¸ÇöÀÌ ´Ù¸§
+void MotionCallback(int x, int y) { // êµ¬í˜„ì´ ë‹¤ë¦„
 	int tdx = x - downX, tdy = 0, tdz = y - downY, id = choice - 1;
-	if (leftButton) { //¿ÞÂÊ¸¶¿ì½º¸¦ ´©¸£¸é º®°ú ±¸¸¦ È¸Àü, ¿©±æ ¾ø¾Ö¸é ¸¶¿ì½º ´­·¯¼­ È­¸éÀüÈ¯ ¾ÈÇÒ¼ö ÀÖÀ½
+	if (leftButton) { //ì™¼ìª½ë§ˆìš°ìŠ¤ë¥¼ ëˆ„ë¥´ë©´ ë²½ê³¼ êµ¬ë¥¼ íšŒì „, ì—¬ê¸¸ ì—†ì• ë©´ ë§ˆìš°ìŠ¤ ëˆŒëŸ¬ì„œ í™”ë©´ì „í™˜ ì•ˆí• ìˆ˜ ìžˆìŒ
 		rotate_x += x - downX;
 		rotate_y += y - downY;
 		for (i = 0; i < NO_SPHERE; i++) rotate(i);
 		rotate(WALL_ID);
 	}
-	else if (rightButton) { // ºÓÀº°øÀÇ À§Ä¡º¯°æ, ÀÌºÎºÐÀ» Àß ¸¸Áö¸é arkanoid¿¡¼­ Èò»ö°ø À§Ä¡ Á¶Àý °¡´É
+	else if (rightButton) { // ë¶‰ì€ê³µì˜ ìœ„ì¹˜ë³€ê²½, ì´ë¶€ë¶„ì„ ìž˜ ë§Œì§€ë©´ arkanoidì—ì„œ í°ìƒ‰ê³µ ìœ„ì¹˜ ì¡°ì ˆ ê°€ëŠ¥
 		if (id < NO_SPHERE) g_sphere[id].setCenter(g_sphere[id].center_x + tdx / 100.0, g_sphere[id].center_y + tdy / 100.0, g_sphere[id].center_z + tdz / 100.0);
 	}
 	downX = x;   downY = y;
 	glutPostRedisplay();
 }
 
-void initRotate() { // ±¸ÇöÀÌ »ìÂ¦ ´Ù¸§ initGL¿¡¼­ È£Ãâ
+void initRotate() { // êµ¬í˜„ì´ ì‚´ì§ ë‹¤ë¦„ initGLì—ì„œ í˜¸ì¶œ
 	g_sphere[0].init();
 	g_sphere[1].init();
 	g_sphere[2].init();
@@ -455,10 +455,10 @@ void initRotate() { // ±¸ÇöÀÌ »ìÂ¦ ´Ù¸§ initGL¿¡¼­ È£Ãâ
 }
 
 void InitGL() {
-	//openglÀÇ ±âº» ¼³Á¤°ª
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH); // ±íÀÌ¹öÆÛ°¡ ÀÖ°í rgb»ö»ó¹öÆÛ°¡ ÀÖ´Â ÀÌÁß¹öÆÛÃ¢ÀÇ ¸ðµå¸¦ ¼³Á¤
+	//openglì˜ ê¸°ë³¸ ì„¤ì •ê°’
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH); // ê¹Šì´ë²„í¼ê°€ ìžˆê³  rgbìƒ‰ìƒë²„í¼ê°€ ìžˆëŠ” ì´ì¤‘ë²„í¼ì°½ì˜ ëª¨ë“œë¥¼ ì„¤ì •
 	glutInitWindowSize(1024, 768);
-	glutCreateWindow("OpenGL Applications"); // Displaymode¿¡¼­ ¼³Á¤ÇÑ ¹öÆÛ´ë·Î Ã¢À» ¶ç¿ö¶ó
+	glutCreateWindow("OpenGL Applications"); // Displaymodeì—ì„œ ì„¤ì •í•œ ë²„í¼ëŒ€ë¡œ ì°½ì„ ë„ì›Œë¼
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 	glClearColor(0.7, 0.7, 0.7, 0.0);
@@ -471,26 +471,26 @@ void InitGL() {
 	glColorMaterial(GL_FRONT, GL_DIFFUSE);
 	glLightfv(GL_LIGHT0, GL_POSITION, light0Position);
 	glEnable(GL_LIGHT0);
-	initRotate(); //±¸¿Í wallÀÇ initÈ£Ãâ
+	initRotate(); //êµ¬ì™€ wallì˜ inití˜¸ì¶œ
 
 	glShadeModel(GL_SMOOTH);
 	glEnable(GL_LIGHTING);
 
 	
 
-	//ÀÌÇÏ openglÀÇ ÀÌº¥Æ® Ã³¸®ºÎºÐ
-	//ÄÝ¹éÇÔ¼ö¶õ: ÀÌº¥Æ® Ã³¸®±â¶ó°íµµ ÇÑ´Ù.w¸¦ ´©¸£¸é ¾ÕÀ¸·Î °¡°í, esc¸¦ ´©¸£¸é ²¨Áö´Â°Å¿Í °°ÀÌ ¾î¶² ¹ÝÀÀ¿¡´ëÇÑ °á°ú¸¦ ³ªÅ¸³»´Â ÇÔ¼öÀÎµí, µð½ºÇÃ·¹ÀÌÄÝ¹éÇÔ¼öÀÇ °æ¿ì ÇÁ·¹ÀÓ¸¶´Ù È£ÃâµÉ°ÍÀÌ´Ù.
+	//ì´í•˜ openglì˜ ì´ë²¤íŠ¸ ì²˜ë¦¬ë¶€ë¶„
+	//ì½œë°±í•¨ìˆ˜ëž€: ì´ë²¤íŠ¸ ì²˜ë¦¬ê¸°ë¼ê³ ë„ í•œë‹¤.wë¥¼ ëˆ„ë¥´ë©´ ì•žìœ¼ë¡œ ê°€ê³ , escë¥¼ ëˆ„ë¥´ë©´ êº¼ì§€ëŠ”ê±°ì™€ ê°™ì´ ì–´ë–¤ ë°˜ì‘ì—ëŒ€í•œ ê²°ê³¼ë¥¼ ë‚˜íƒ€ë‚´ëŠ” í•¨ìˆ˜ì¸ë“¯, ë””ìŠ¤í”Œë ˆì´ì½œë°±í•¨ìˆ˜ì˜ ê²½ìš° í”„ë ˆìž„ë§ˆë‹¤ í˜¸ì¶œë ê²ƒì´ë‹¤.
 
-	glutIdleFunc(renderScene); // ¾îÇÃ¸®ÄÉÀÌ¼ÇÀÇ ÈÞ¸é(idle)½Ã°£¿¡ È£ÃâµÇ´Â ÇÔ¼ö(renderscene)¸¦ È£ÃâÇÏµµ·ÏÇÑ´Ù. Áï ¾Ö´Ï¸ÞÀÌ¼ÇÀÌ µÈ´Ù.
-	glutReshapeFunc(ReshapeCallback); // GLUT´Â Ã³À½ À©µµ¿ì¸¦ ¿­¶§, À©µµ¿ì À§Ä¡¸¦ ¿Å±æ¶§, À©µµ¿ì Å©±â¸¦ Á¶ÀýÇÒ¶§ reshapeevent°¡ ¹ß»ýÇÑ°É·Î º»´Ù. ¸Å°³º¯¼ö¼ÓÀÇ ÇÔ¼ö·Î ¿øÇÏ´Â ÇÔ¼öÈ¿°ú¸¦ ÇÒ¼öÀÖ´Ù.
-									  // reshapeevent °¡ ¹ß»ýÇÏ¸é °ýÈ£¾ÈÀÇ ÆÄ¶ó¹ÌÅÍ¸¦ÅëÇØ º¯°æµÈ À©µµ¿ìÀÇ Æø°ú ³ôÀÌ¸¦ ÄÝ¹éÇÔ¼ö·Î Àü´ÞÇÑ´Ù. ±×·¡¼­ width¿Í height¸¦ ±×³É ¹Þ¾Æ¼­ ¾²´Âµí.
-	glutDisplayFunc(DisplayCallback); // ÀÌ ÇÔ¼ö´Â DisplayCallbackÀÌ¶ó´Â ÇÔ¼ö¸¦ µð½ºÇÃ·¹ÀÌÀÌº¥Æ®¿¡ ´ëÇÑ ÄÝ¹éÇÔ¼ö·Î »ç¿ëÇÏ´Â ÇÔ¼ö, ¸Å°³º¯¼ö·Î Àü´ÞÇÑ ÇÔ¼ö´Â µð½ºÇÃ·¹ÀÌÀÌº¥Æ®¸¶´Ù È£ÃâµÈ´Ù.
-	glutKeyboardFunc(KeyboardCallback); // Å°º¸µå°¡ ´­·ÈÀ»°æ¿ì ÀÛµ¿ÇÏ´Â ÄÝ¹éÇÔ¼ö
-	glutMouseFunc(MouseCallback); // ¸¶¿ì½º°¡ ´­·ÈÀ»°æ¿ì ÀÛµ¿ÇÏ´Â ÄÝ¹éÇÔ¼ö
-	glutMotionFunc(MotionCallback); // ¹öÆ°À» ´©¸¥»óÅÂ¿¡¼­ ¸¶¿ì½º¸¦ ¿òÁ÷ÀÏ¶§ ÀÛµ¿ÇÏ´Â ÄÝ¹éÇÔ¼ö, ¾Æ¹«·± ¹öÆ°µµ ´©¸£Áö ¾ÊÀº »óÅÂ¿¡¼­ ¸¶¿ì½º¸¦ ¿òÁ÷ÀÌ¸é glutPassivemotionfuncÀÌ´Ù.
+	glutIdleFunc(renderScene); // ì–´í”Œë¦¬ì¼€ì´ì…˜ì˜ íœ´ë©´(idle)ì‹œê°„ì— í˜¸ì¶œë˜ëŠ” í•¨ìˆ˜(renderscene)ë¥¼ í˜¸ì¶œí•˜ë„ë¡í•œë‹¤. ì¦‰ ì• ë‹ˆë©”ì´ì…˜ì´ ëœë‹¤.
+	glutReshapeFunc(ReshapeCallback); // GLUTëŠ” ì²˜ìŒ ìœˆë„ìš°ë¥¼ ì—´ë•Œ, ìœˆë„ìš° ìœ„ì¹˜ë¥¼ ì˜®ê¸¸ë•Œ, ìœˆë„ìš° í¬ê¸°ë¥¼ ì¡°ì ˆí• ë•Œ reshapeeventê°€ ë°œìƒí•œê±¸ë¡œ ë³¸ë‹¤. ë§¤ê°œë³€ìˆ˜ì†ì˜ í•¨ìˆ˜ë¡œ ì›í•˜ëŠ” í•¨ìˆ˜íš¨ê³¼ë¥¼ í• ìˆ˜ìžˆë‹¤.
+									  // reshapeevent ê°€ ë°œìƒí•˜ë©´ ê´„í˜¸ì•ˆì˜ íŒŒë¼ë¯¸í„°ë¥¼í†µí•´ ë³€ê²½ëœ ìœˆë„ìš°ì˜ í­ê³¼ ë†’ì´ë¥¼ ì½œë°±í•¨ìˆ˜ë¡œ ì „ë‹¬í•œë‹¤. ê·¸ëž˜ì„œ widthì™€ heightë¥¼ ê·¸ëƒ¥ ë°›ì•„ì„œ ì“°ëŠ”ë“¯.
+	glutDisplayFunc(DisplayCallback); // ì´ í•¨ìˆ˜ëŠ” DisplayCallbackì´ë¼ëŠ” í•¨ìˆ˜ë¥¼ ë””ìŠ¤í”Œë ˆì´ì´ë²¤íŠ¸ì— ëŒ€í•œ ì½œë°±í•¨ìˆ˜ë¡œ ì‚¬ìš©í•˜ëŠ” í•¨ìˆ˜, ë§¤ê°œë³€ìˆ˜ë¡œ ì „ë‹¬í•œ í•¨ìˆ˜ëŠ” ë””ìŠ¤í”Œë ˆì´ì´ë²¤íŠ¸ë§ˆë‹¤ í˜¸ì¶œëœë‹¤.
+	glutKeyboardFunc(KeyboardCallback); // í‚¤ë³´ë“œê°€ ëˆŒë ¸ì„ê²½ìš° ìž‘ë™í•˜ëŠ” ì½œë°±í•¨ìˆ˜
+	glutMouseFunc(MouseCallback); // ë§ˆìš°ìŠ¤ê°€ ëˆŒë ¸ì„ê²½ìš° ìž‘ë™í•˜ëŠ” ì½œë°±í•¨ìˆ˜
+	glutMotionFunc(MotionCallback); // ë²„íŠ¼ì„ ëˆ„ë¥¸ìƒíƒœì—ì„œ ë§ˆìš°ìŠ¤ë¥¼ ì›€ì§ì¼ë•Œ ìž‘ë™í•˜ëŠ” ì½œë°±í•¨ìˆ˜, ì•„ë¬´ëŸ° ë²„íŠ¼ë„ ëˆ„ë¥´ì§€ ì•Šì€ ìƒíƒœì—ì„œ ë§ˆìš°ìŠ¤ë¥¼ ì›€ì§ì´ë©´ glutPassivemotionfuncì´ë‹¤.
 }
 
-/* Ãß°¡ÇØ¾ÆÇÔ
+/* ì¶”ê°€í•´ì•„í•¨
 void restart_game()
 {
 	space_flag = 0;
@@ -527,8 +527,8 @@ int currentTime, previousTime = -1;
 
 */
 
-int currentTime, previousTime = -1; // °Å±â¿£ ¾øÀ½
-void renderScene() // ±¸Çö ´Ù¸§, ¾îÇÃ¸®ÄÉÀÌ¼ÇÀÇ ÈÞ¸é½Ã°£¿¡ È£ÃâµÇ´Â ÇÔ¼ö, glutidleFunc()¿¡¼­ È£ÃâµÈ´Ù.
+int currentTime, previousTime = -1; // ê±°ê¸°ì—” ì—†ìŒ
+void renderScene() // êµ¬í˜„ ë‹¤ë¦„, ì–´í”Œë¦¬ì¼€ì´ì…˜ì˜ íœ´ë©´ì‹œê°„ì— í˜¸ì¶œë˜ëŠ” í•¨ìˆ˜, glutidleFunc()ì—ì„œ í˜¸ì¶œëœë‹¤.
 {
 	
 	int timeDelta;
@@ -541,10 +541,10 @@ void renderScene() // ±¸Çö ´Ù¸§, ¾îÇÃ¸®ÄÉÀÌ¼ÇÀÇ ÈÞ¸é½Ã°£¿¡ È£ÃâµÇ´Â ÇÔ¼ö, glutid
 	float z = g_sphere[0].center_z;
 
 	if (space_flag) g_sphere[0].setCenter( 
-		x + timeDelta * 0.002 * g_sphere[0].dir_x, // ÇØ´ç±¸Ã¼ÀÇ ¼Óµµ, 0.002°¡ ±âº»°ª, 
+		x + timeDelta * 0.002 * g_sphere[0].dir_x, // í•´ë‹¹êµ¬ì²´ì˜ ì†ë„, 0.002ê°€ ê¸°ë³¸ê°’, 
 		y + timeDelta * 0.002 * g_sphere[0].dir_y,
 		z + timeDelta * 0.002 * g_sphere[0].dir_z);
-	glutPostRedisplay(); // À©µµ¿ì¸¦ ´Ù½Ã±×¸®µµ·Ï ¿äÃ», ¹Ù·Î µð½ºÇÃ·¹ÀÌÄÝ¹éÇÔ¼ö(renderscene)°¡ È£ÃâµÇÁø ¾Ê°í ¸ÞÀÎ·çÇÁ(¾Æ¸¶ glutMainloop?)¿¡¼­ È£Ãâ½ÃÁ¡À» °áÁ¤ÇÑ´Ù. ÀÌ°Ô ¾øÀ¸¸é ¿¬°áÀÌ ºÎÀÚ¿¬½º·¯¿ò
+	glutPostRedisplay(); // ìœˆë„ìš°ë¥¼ ë‹¤ì‹œê·¸ë¦¬ë„ë¡ ìš”ì²­, ë°”ë¡œ ë””ìŠ¤í”Œë ˆì´ì½œë°±í•¨ìˆ˜(renderscene)ê°€ í˜¸ì¶œë˜ì§„ ì•Šê³  ë©”ì¸ë£¨í”„(ì•„ë§ˆ glutMainloop?)ì—ì„œ í˜¸ì¶œì‹œì ì„ ê²°ì •í•œë‹¤. ì´ê²Œ ì—†ìœ¼ë©´ ì—°ê²°ì´ ë¶€ìžì—°ìŠ¤ëŸ¬ì›€
 	previousTime = currentTime;
 
 }
@@ -560,12 +560,12 @@ void InitObjects()
 	g_wall.setColor(0.0, 1.0, 0.0); g_wall.setCenter(0.0, -0.6, 0.0);
 }
 
-// Ãß°¡ÇØ¾ßÇÔ using namespace std; 
+// ì¶”ê°€í•´ì•¼í•¨ using namespace std; 
 int main(int argc, char** argv)
 {
-	glutInit(&argc, argv); // glut ½ÃÀÛ ÃÊ±âÈ­, º¸Åë ±×·¡ÇÈ¸ø¾²´Âµ¥¼­ ÇÑ´Ù°Å³ª ÇÏ¸é ¿À·ù °¨Áö¿ë
-	InitObjects(); // ÃÊ±âÈ­¸é, °¢ °øÀÇ À§Ä¡¸¦ ¼¼ÆÃ
-	InitGL(); // opengl °ü·Ã ÃÊ±âÈ­
-	glutMainLoop(); // ÀÌº¥Æ® ·çÇÁ¸¦ µ¹¸®´Â°Í, ÀÌº¥Æ®º°·Î ÄÝ¹éÇÔ¼ö µî·ÏÀ» ¸¶ÃÆÀ¸´Ï ÀÌº¥Æ® ·çÇÁ·Î ÁøÀÔÇÏ¶ó.
+	glutInit(&argc, argv); // glut ì‹œìž‘ ì´ˆê¸°í™”, ë³´í†µ ê·¸ëž˜í”½ëª»ì“°ëŠ”ë°ì„œ í•œë‹¤ê±°ë‚˜ í•˜ë©´ ì˜¤ë¥˜ ê°ì§€ìš©
+	InitObjects(); // ì´ˆê¸°í™”ë©´, ê° ê³µì˜ ìœ„ì¹˜ë¥¼ ì„¸íŒ…
+	InitGL(); // opengl ê´€ë ¨ ì´ˆê¸°í™”
+	glutMainLoop(); // ì´ë²¤íŠ¸ ë£¨í”„ë¥¼ ëŒë¦¬ëŠ”ê²ƒ, ì´ë²¤íŠ¸ë³„ë¡œ ì½œë°±í•¨ìˆ˜ ë“±ë¡ì„ ë§ˆì³¤ìœ¼ë‹ˆ ì´ë²¤íŠ¸ ë£¨í”„ë¡œ ì§„ìž…í•˜ë¼.
 	return 0;
 }
