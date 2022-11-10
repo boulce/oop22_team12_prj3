@@ -1,16 +1,16 @@
-﻿/* Simple geometry viewer:  Left mouse: rotate;  Right mouse:   translate;  ESC to quit. */
+/* Simple geometry viewer:  Left mouse: rotate;  Right mouse:   translate;  ESC to quit. */
 #include <assert.h>
 #include <math.h>
 #include <stdlib.h>
 //추가해야함 #include <iostream>
-#include <GL/glut.h>
+#include <GLUT/glut.h>
 #include <iostream>
 // you may try "#include <GL/glut.h>" if "#include <GLUT/glut.h>" wouldn't work
 //#include <GL/glut.h>
 
 //GLdouble rotMatrix[4][16];
 //추가해야함 const int NO_SPHERE = 17;
-const int NO_SPHERE = 3;
+const int NO_SPHERE = 3; // g_sphere[]의 구의 개수
 const int WALL_ID = 1000;
 /* 추가해야함
 const int WALL_WIDTH=16;
@@ -19,7 +19,12 @@ const int WALL_HIGHT=16;
 /*추가해야함
 int rotate_x=180, rotate_y=80;
 int choice=2;*/
-int rotate_x = 180, rotate_y = 80;
+const int rotate_x = 0;
+const int rotate_y = 90; // 초기 initRotate에서 공과 평면이 회전하는 각도, rotate_y만 90도 회전하도록 한다.
+
+const float planeWidth = 10; // plane 가로
+const float planeHeight = 20; // plane 세로
+const float planeDepth = 0.2; // plane 두께
 int choice = 1;
 
 GLfloat BoxVerts[][3] = { // 바닥의 꼭짓점 좌표, 일종의 단위벡터로 바닥크기를 바꾸려면 CWALL의 생성자를 바꿔라
@@ -114,6 +119,44 @@ public:
 	{
 		color_r = r; color_g = g; color_b = b;
 	}
+    
+    // 수정되지 않은 다른 사람의 hasIntersected, 공이 끼지 않게 하려면 개선해야함
+    bool hasIntersected(float x, float z)
+    {
+        float deltaX;
+        float deltaZ;
+        
+        deltaX = this->center_x - x;
+        deltaZ = this->center_z - z;
+        if (sqrt(deltaX * deltaX + deltaZ * deltaZ) <= 0.8)
+            return (true);
+        return (false);
+    }
+    
+    // 우리가 구현한 hitBy, 공이 끼지 않게 하려면 개선해야함
+    void hitBy(CSphere hitSphere)
+    {
+        float deltaX;
+        float deltaZ;
+        float distance;
+        float hit_angle;
+        float temp;
+        
+        deltaX = hitSphere.center_x - this->center_x;
+        deltaZ = hitSphere.center_z - this->center_z;
+        distance = sqrt(deltaX * deltaX + deltaZ * deltaZ);
+        float k_x = deltaX / distance;
+        float k_z = deltaZ / distance;
+        float v_x = -dir_x;
+        float v_z = -dir_z;
+        
+        float original_speed = sqrt(v_x*v_x + v_z*v_z);
+        dir_x = v_x + 2 * ((k_x * v_x) + (k_z * v_z)) * k_x;
+        dir_z = v_z + 2 * ((k_x * v_x) + (k_z * v_z)) * k_z;
+        float new_speed = sqrt(dir_x*dir_x + dir_z*dir_z);
+        dir_x *= original_speed / new_speed;
+        dir_z *= original_speed / new_speed;
+    }
 	/*추가해야함 
 	bool hasIntersected(float x, float z)
 	{
@@ -311,12 +354,8 @@ CSphere g_sphere[NO_SPHERE];
 CWall g_wall(WALL_WIDTH, 0.2, WALL_HIGHT);
 */
 
-
-
-
-
-CSphere g_sphere[3];
-CWall g_wall(11, 0.2, 11);
+CSphere g_sphere[3]; // 공 배열
+CWall g_wall(planeWidth, planeDepth, planeHeight); // 바닥 평면
 
 void ReshapeCallback(int width, int height)
 {
@@ -367,7 +406,6 @@ void DisplayCallback(void)
 
 	for (i = 0; i < NO_SPHERE; i++) g_sphere[i].draw(); //공 그리기
 	g_wall.draw(); // 벽 그리기
-
 	
 	
 	glutSwapBuffers(); // front버퍼와 back버퍼를 swapping 하기 위한것, 프론트버퍼내용이 화면에 뿌려지는 동안 새로운 내용이 백버퍼에 쓰이고 백버퍼에 기록이 다 되면 프론트와 백이 바뀐다.
@@ -427,6 +465,7 @@ void rotate(int id)
 	if (id == WALL_ID) {
 		glGetDoublev(GL_MODELVIEW_MATRIX, g_wall.m_mRotate);
 	}
+
 	glPopMatrix();
 }
 
@@ -454,6 +493,8 @@ void initRotate() { // 구현이 살짝 다름 initGL에서 호출
 	g_sphere[2].init();
 	g_wall.init();
 
+    
+    // 초기에 공과 벽을 z축을 중심으로 한 번 회전시켜 위에서 아래로 내려보는 것 처럼 만든다
 	for (i = 0; i < NO_SPHERE; i++) rotate(i);
 	rotate(WALL_ID);
 }
@@ -543,7 +584,8 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
 	currentTime = glutGet(GLUT_ELAPSED_TIME);
 	if (previousTime == -1) timeDelta = 0;
 	else timeDelta = currentTime - previousTime;
-	
+    int temp_time;
+    
 	float x = g_sphere[0].center_x;
 	float y = g_sphere[0].center_y;
 	float z = g_sphere[0].center_z;
@@ -553,6 +595,27 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
 		y + timeDelta * 0.002 * g_sphere[0].dir_y,
 		z + timeDelta * 0.002 * g_sphere[0].dir_z);
 	glutPostRedisplay(); // 윈도우를 다시그리도록 요청, 바로 디스플레이콜백함수(renderscene)가 호출되진 않고 메인루프(아마 glutMainloop?)에서 호출시점을 결정한다. 이게 없으면 연결이 부자연스러움
+    
+    // renderScene에서 공 사이의 충돌을 처리하는 부분
+    // 공이 닿는 지점을 검사하고, 닿았을 경우 반사를 실행
+    int idx;
+    idx = 1;
+    temp_time = -1;
+    while (idx < NO_SPHERE) {
+        if (g_sphere[0].hasIntersected(g_sphere[idx].center_x, g_sphere[idx].center_z) == true)
+        {
+            if (temp_time + 1 < currentTime)
+            {
+                g_sphere[0].hitBy(g_sphere[idx]);
+                temp_time = currentTime;
+            }
+            // 밑에 코드는 충돌된 공의 z 좌표를 100으로 설정하여 화면 밖으로 나가게 한다. 즉, 화면상에서 공을 없애는 효과
+            //if (idx != 1)
+                //g_sphere[idx].center_z = 100;
+        }
+        idx++;
+    }
+    
 	previousTime = currentTime;
 
 }
@@ -561,11 +624,12 @@ void InitObjects()
 {
 	// specify initial colors and center positions of each spheres
 	g_sphere[0].setColor(0.8, 0.2, 0.2); g_sphere[0].setCenter(0.0, 0.0, 0.0);
-	g_sphere[1].setColor(0.2, 0.8, 0.2); g_sphere[1].setCenter(1.0, 0.0, 0.0);
-	g_sphere[2].setColor(0.2, 0.2, 0.8); g_sphere[2].setCenter(0.0, 0.0, 1.0);
+	g_sphere[1].setColor(0.2, 0.8, 0.2); g_sphere[1].setCenter(2.0, 0.0, 0.0);
+	g_sphere[2].setColor(0.2, 0.2, 0.8); g_sphere[2].setCenter(0.0, 0.0, 2.0);
 
 	// specify initial colors and center positions of a wall
 	g_wall.setColor(0.0, 1.0, 0.0); g_wall.setCenter(0.0, -0.6, 0.0);
+
 }
 
 // 추가해야함 using namespace std; 
