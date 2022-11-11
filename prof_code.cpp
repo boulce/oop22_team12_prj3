@@ -19,8 +19,8 @@ const int WALL_HIGHT=16;
 /*추가해야함
 int rotate_x=180, rotate_y=80;
 int choice=2;*/
-const int rotate_x = 0;
-const int rotate_y = 90; // 초기 initRotate에서 공과 평면이 회전하는 각도, rotate_y만 90도 회전하도록 한다.
+const int rotate_x = 90; // 초기 initRotate에서 공과 평면이 회전하는 각도, x축으로 90도 회전하도록 한다.
+//const int rotate_y = 90;
 
 const float planeWidth = 10; // plane 가로
 const float planeHeight = 20; // plane 세로
@@ -467,8 +467,8 @@ void rotate(int id)
 	glPushMatrix(); // 현재 행렬 저장
 	glLoadIdentity(); // 단위행렬로 초기화 (위의 현재행렬과 다름)
 
-	glRotated(((double)rotate_y), 1.0, 0.0, 0.0); //단위행렬로 초기화된걸 rotate연산
-	glRotated(((double)rotate_x), 0.0, 1.0, 0.0); // 마찬가지
+	glRotated(((double)rotate_x), 1.0, 0.0, 0.0); //단위행렬로 초기화된걸 rotate연산, x축으로 rotate_x만큼 회전
+//	glRotated(((double)rotate_x), 0.0, 1.0, 0.0); // 마찬가지
 
 	if (id < NO_SPHERE) {
 		glGetDoublev(GL_MODELVIEW_MATRIX, g_sphere[id].m_mRotate); //매트릭스 종류, 값을 받을 메트릭스, 즉 modelview_matrix종류의 g_sphere...에 바로 위에서 rotate한 행렬을 받아오겠다. 
