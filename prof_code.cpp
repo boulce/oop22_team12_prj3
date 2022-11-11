@@ -271,6 +271,17 @@ public:
 		width = w;
 		height = h;
 		depth = d;
+        
+        int i, j;
+        float coef;
+        for (i = 0; i < 8; i++) {
+            for (j = 0; j < 3; j++) {
+                if (j == 0) coef = w / 2.0;
+                if (j == 1) coef = h / 2.0;
+                if (j == 2) coef = d / 2.0;
+                Verts[i][j] = coef * BoxVerts[i][j]; // BoxVerts는 일종의 단위벡터, coef는 일종의 단위벡터에 곱해지는 크기
+            }
+        }
 	}
 
 	void setCenter(float x, float y, float z)
@@ -356,6 +367,7 @@ CWall g_wall(WALL_WIDTH, 0.2, WALL_HIGHT);
 
 CSphere g_sphere[3]; // 공 배열
 CWall g_wall(planeWidth, planeDepth, planeHeight); // 바닥 평면
+CWall boundary_wall[4]; // 가장자리 벽
 
 void ReshapeCallback(int width, int height)
 {
@@ -406,7 +418,7 @@ void DisplayCallback(void)
 
 	for (i = 0; i < NO_SPHERE; i++) g_sphere[i].draw(); //공 그리기
 	g_wall.draw(); // 벽 그리기
-	
+    for(int i = 0; i < 4; i++) boundary_wall[i].draw(); // boundary_wall 그리기
 	
 	glutSwapBuffers(); // front버퍼와 back버퍼를 swapping 하기 위한것, 프론트버퍼내용이 화면에 뿌려지는 동안 새로운 내용이 백버퍼에 쓰이고 백버퍼에 기록이 다 되면 프론트와 백이 바뀐다.
 						//백버퍼에 그림을 다 그렸으면 전면버퍼와 통째로 교체한다. 전면과 후면이 일시에 교체되므로 백버퍼에 미리 준비해둔 그림이 나타난다.
@@ -464,6 +476,8 @@ void rotate(int id)
 
 	if (id == WALL_ID) {
 		glGetDoublev(GL_MODELVIEW_MATRIX, g_wall.m_mRotate);
+        
+        for(int i = 0; i < 4; i++) glGetDoublev(GL_MODELVIEW_MATRIX, boundary_wall[i].m_mRotate); // test_wall 그리기
 	}
 
 	glPopMatrix();
@@ -493,7 +507,7 @@ void initRotate() { // 구현이 살짝 다름 initGL에서 호출
 	g_sphere[2].init();
 	g_wall.init();
 
-    
+    for(int i = 0; i < 4; i++) boundary_wall[i].init();
     // 초기에 공과 벽을 z축을 중심으로 한 번 회전시켜 위에서 아래로 내려보는 것 처럼 만든다
 	for (i = 0; i < NO_SPHERE; i++) rotate(i);
 	rotate(WALL_ID);
@@ -629,6 +643,20 @@ void InitObjects()
 
 	// specify initial colors and center positions of a wall
 	g_wall.setColor(0.0, 1.0, 0.0); g_wall.setCenter(0.0, -0.6, 0.0);
+    
+    boundary_wall[0].setSize(planeWidth, 1, 0.1);
+    boundary_wall[0].setColor(0.0, 0.0, 0.0);
+    boundary_wall[1].setSize(planeWidth, 1, 0.1);
+    boundary_wall[1].setColor(0.0, 0.0, 0.0);
+    boundary_wall[2].setSize(0.1, 1, planeHeight);
+    boundary_wall[2].setColor(0.0, 0.0, 0.0);
+    boundary_wall[3].setSize(0.1, 1, planeHeight);
+    boundary_wall[3].setColor(0.0, 0.0, 0.0);
+    
+    boundary_wall[0].setCenter(0.0, 0.0, planeHeight/2); // 위쪽 가장자리 벽
+    boundary_wall[1].setCenter(0.0, 0.0, -(planeHeight/2)); // 아래쪽 가장자리 벽
+    boundary_wall[2].setCenter(planeWidth/2, 0.0, 0.0); // 오른쪽 가장자리 벽
+    boundary_wall[3].setCenter(-(planeWidth/2), 0.0, 0.0); // 왼쪽 가장자리 벽
 
 }
 
