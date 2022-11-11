@@ -128,7 +128,7 @@ public:
         
         deltaX = this->center_x - x;
         deltaZ = this->center_z - z;
-        if (sqrt(deltaX * deltaX + deltaZ * deltaZ) <= 0.8)
+        if (sqrt(deltaX * deltaX + deltaZ * deltaZ) <= 0.85)
             return (true);
         return (false);
     }
@@ -328,20 +328,23 @@ public:
 		}
 	}
 	
+    // 다른 사람 코드 그대로 가져옴 수정 필요
 	bool hasUpIntersected(CSphere* sphere)
 	{
-		if (sphere->center_z + 0.425 >= planeHeight / 2)
+		if (sphere->center_z + 0.425 >= planeHeight / 2 || sphere->center_z - 0.425 <= -1 * planeHeight / 2)
 			return (true);
 		return (false);
 	}
-
+    
+    // 다른 사람 코드 그대로 가져옴 수정 필요
 	bool hasRightLeftIntersected(CSphere* sphere)
 	{
 		if (sphere->center_x + 0.425 >= planeWidth / 2 || sphere->center_x - 0.425 <= -1 * planeWidth / 2)
 			return (true);
 		return (false);
 	}
-
+    
+    // 다른 사람 코드 그대로 가져옴 수정 필요
 	void hitBy(CSphere* sphere)
 	{
 		if (hasUpIntersected(sphere))
@@ -628,8 +631,10 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
         idx++;
     }
     
+    // 벽에 대한 반사 실행, 다른 사람 코드 그대로 가져옴
+    g_wall.hitBy(&g_sphere[0]);
+    
 	previousTime = currentTime;
-
 }
 
 void InitObjects()
