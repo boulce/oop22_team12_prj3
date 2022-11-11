@@ -91,7 +91,7 @@ class CSphere
 public:
 	float center_x, center_y, center_z;
 	float color_r, color_g, color_b;
-	float dir_x, dir_y, dir_z;
+	float velocity_x, velocity_y, velocity_z; // 공의 x, y, z축 성분 속도
 	float speed;
 
 public:
@@ -136,26 +136,24 @@ public:
     // 우리가 구현한 hitBy, 공이 끼지 않게 하려면 개선해야함
     void hitBy(CSphere hitSphere)
     {
-        float deltaX;
-        float deltaZ;
-        float distance;
-        float hit_angle;
-        float temp;
+        float deltaX = hitSphere.center_x - this->center_x;
+        float deltaZ = hitSphere.center_z - this->center_z;
+        float distance = sqrt(deltaX * deltaX + deltaZ * deltaZ);
         
-        deltaX = hitSphere.center_x - this->center_x;
-        deltaZ = hitSphere.center_z - this->center_z;
-        distance = sqrt(deltaX * deltaX + deltaZ * deltaZ);
         float k_x = deltaX / distance;
         float k_z = deltaZ / distance;
-        float v_x = -dir_x;
-        float v_z = -dir_z;
+        float v_x = -velocity_x;
+        float v_z = -velocity_z;
         
         float original_speed = sqrt(v_x*v_x + v_z*v_z);
-        dir_x = v_x + 2 * ((k_x * v_x) + (k_z * v_z)) * k_x;
-        dir_z = v_z + 2 * ((k_x * v_x) + (k_z * v_z)) * k_z;
-        float new_speed = sqrt(dir_x*dir_x + dir_z*dir_z);
-        dir_x *= original_speed / new_speed;
-        dir_z *= original_speed / new_speed;
+        float new_speed;
+        velocity_x = v_x + 2 * ((k_x * v_x) + (k_z * v_z)) * k_x;
+        velocity_z = v_z + 2 * ((k_x * v_x) + (k_z * v_z)) * k_z;
+        
+        new_speed = sqrt(velocity_x*velocity_x + velocity_z*velocity_z);
+        
+        velocity_x *= original_speed / new_speed;
+        velocity_z *= original_speed / new_speed;
     }
 	/*추가해야함 
 	bool hasIntersected(float x, float z)
@@ -329,17 +327,17 @@ public:
 			glEnd(); //glbegin과 마찬가지로 도형그리기 끝
 		}
 	}
-	/*추가해야함 
+	
 	bool hasUpIntersected(CSphere* sphere)
 	{
-		if (sphere->center_z + 0.425 >= WALL_HIGHT / 2)
+		if (sphere->center_z + 0.425 >= planeHeight / 2)
 			return (true);
 		return (false);
 	}
 
 	bool hasRightLeftIntersected(CSphere* sphere)
 	{
-		if (sphere->center_x + 0.425 >= WALL_WIDTH / 2 || sphere->center_x - 0.425 <= -1 * WALL_WIDTH / 2)
+		if (sphere->center_x + 0.425 >= planeWidth / 2 || sphere->center_x - 0.425 <= -1 * planeWidth / 2)
 			return (true);
 		return (false);
 	}
@@ -348,13 +346,13 @@ public:
 	{
 		if (hasUpIntersected(sphere))
 		{
-			sphere->dir_z = -(sphere->dir_z);
+			sphere->velocity_z = -(sphere->velocity_z);
 		}
 		else if (hasRightLeftIntersected(sphere))
 		{
-			sphere->dir_x = -(sphere->dir_x);
+			sphere->velocity_x = -(sphere->velocity_x);
 		}
-	}*/
+	}
 
 
 };
@@ -439,9 +437,9 @@ void KeyboardCallback(unsigned char ch, int x, int y)
 		if (space_flag) space_flag = 0;
 		else {
 			space_flag = 1;
-			g_sphere[0].dir_x = g_sphere[2].center_x - g_sphere[0].center_x; //sphere[0]은 스페이스를 누르면 움직이는 빨간 공
-			g_sphere[0].dir_y = g_sphere[2].center_y - g_sphere[0].center_y;
-			g_sphere[0].dir_z = g_sphere[2].center_z - g_sphere[0].center_z;
+			g_sphere[0].velocity_x = g_sphere[2].center_x - g_sphere[0].center_x; //sphere[0]은 스페이스를 누르면 움직이는 빨간 공
+			g_sphere[0].velocity_y = g_sphere[2].center_y - g_sphere[0].center_y;
+			g_sphere[0].velocity_z = g_sphere[2].center_z - g_sphere[0].center_z;
 		}
 		break; // SPACE_KEY
 
@@ -605,9 +603,9 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
 	float z = g_sphere[0].center_z;
 
 	if (space_flag) g_sphere[0].setCenter( 
-		x + timeDelta * 0.002 * g_sphere[0].dir_x, // 해당구체의 속도, 0.002가 기본값, 
-		y + timeDelta * 0.002 * g_sphere[0].dir_y,
-		z + timeDelta * 0.002 * g_sphere[0].dir_z);
+		x + timeDelta * 0.002 * g_sphere[0].velocity_x, // 속도의 성분이 1일때, 구는 timeDelta 당 0.002만큼 움직인다.
+		y + timeDelta * 0.002 * g_sphere[0].velocity_y,
+		z + timeDelta * 0.002 * g_sphere[0].velocity_z);
 	glutPostRedisplay(); // 윈도우를 다시그리도록 요청, 바로 디스플레이콜백함수(renderscene)가 호출되진 않고 메인루프(아마 glutMainloop?)에서 호출시점을 결정한다. 이게 없으면 연결이 부자연스러움
     
     // renderScene에서 공 사이의 충돌을 처리하는 부분
