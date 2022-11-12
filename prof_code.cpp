@@ -3,8 +3,9 @@
 #include <math.h>
 #include <stdlib.h>
 //추가해야함 #include <iostream>
-#include <GLUT/glut.h>
+#include <GL/glut.h>
 #include <iostream>
+#include <string>
 // you may try "#include <GL/glut.h>" if "#include <GLUT/glut.h>" wouldn't work
 //#include <GL/glut.h>
 
@@ -68,6 +69,9 @@ int i, j;
 GLfloat light0Position[] = { 0, 1, 0, 1.0 };
 int displayMenu, mainMenu;
 
+int Score=0;
+int Life=5; 
+
 void MyIdleFunc(void) { glutPostRedisplay(); } /* things to do while idle */
 void RunIdleFunc(void) { glutIdleFunc(MyIdleFunc); }
 void PauseIdleFunc(void) { glutIdleFunc(NULL); }
@@ -93,6 +97,7 @@ public:
    float color_r, color_g, color_b;
    float velocity_x, velocity_y, velocity_z; // 공의 x, y, z축 성분 속도
    float speed;
+   bool appear=true;
 
 public:
    GLdouble m_mRotate[16];
@@ -134,7 +139,7 @@ public:
    }
 
    // 우리가 구현한 hitBy, 공이 끼지 않게 하려면 개선해야함
-   void hitBy(CSphere hitSphere)
+   void hitBy(CSphere hitSphere) // g_sphere[0].hitBy(g_sphere[idx]); this하면 바로 빨간 공 
    {
       float deltaX = hitSphere.center_x - this->center_x;
       float deltaY = hitSphere.center_y - this->center_y;
@@ -161,6 +166,8 @@ public:
           center_x += velocity_x / sqrt(velocity_x*velocity_x + velocity_y*velocity_y) * 0.1;
           center_y += velocity_y / sqrt(velocity_x*velocity_x + velocity_y*velocity_y) * 0.1;
       }
+
+      
    }
    void draw()
    {
@@ -332,6 +339,7 @@ public:
          // 구와 벽이 부딪혀서 구의 방향이 바뀌었는데 끼어있으면, 반사 방향으로 x 성분과 y 성분의 위치를 끼임이 해결될 때까지 0.1씩 바꾼다.
          while (hasDownIntersected(sphere)) {
             sphere->center_y += 0.1;
+            Life -= 1; //아래 벽과 닿으면 Life가 깎임
          }
       }
       else if (hasLeftIntersected(sphere))
@@ -359,11 +367,6 @@ public:
 
 };
 
-
-/*추가해야함
-CSphere g_sphere[NO_SPHERE];
-CWall g_wall(WALL_WIDTH, 0.2, WALL_HIGHT);
-*/
 
 CSphere g_sphere[NO_SPHERE]; // 공 배열
 CWall g_wall(planeWidth, planeHeight, planeDepth); // 바닥 평면
@@ -404,8 +407,16 @@ GL_PROJECTION에 관해: GL_MODELVIEW가 그려진 도형의 위치라면 도형
    glutPostRedisplay();
 }
 
-
-
+void renderBitmapCharacter(float x, float y, float z, void* font, char* string)
+{
+    char* c;
+    glRasterPos3f(x, y, z);
+    for (c = string; *c != '\0'; c++)
+    {
+        glutBitmapCharacter(font, *c);
+    }
+}
+int space_flag = 2;
 void DisplayCallback(void)
 {
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //glclear는 버퍼들을 미리설정된 값으로 바꾼다.
@@ -416,16 +427,26 @@ void DisplayCallback(void)
 
 
 
-   for (i = 0; i < NO_SPHERE; i++) g_sphere[i].draw(); //공 그리기
+   for (i = 0; i < NO_SPHERE; i++) {
+       if (g_sphere[i].appear == true) {
+           g_sphere[i].draw(); //공 그리기
+       }
+   }
    g_wall.draw(); // 벽 그리기
    for (int i = 0; i < 4; i++) boundary_wall[i].draw(); // boundary_wall 그리기
+
+   renderBitmapCharacter(-10, 3.8, -5, GLUT_BITMAP_TIMES_ROMAN_24, (char*)((("Score : ")+std::to_string(Score)).c_str()));
+   renderBitmapCharacter(15, 3.8, -5, GLUT_BITMAP_TIMES_ROMAN_24, (char*)((("Life : ") + std::to_string(Life)).c_str()));
+   if (space_flag == 0) {
+       renderBitmapCharacter(2.8, -3, 5, GLUT_BITMAP_TIMES_ROMAN_24, (char*)"Space To Start"); //지금 설정이 space 누르면 멈췄다  시작하는거라 오류가 있는데 그 기능 없애면 괜찮을듯?
+   }
 
    glutSwapBuffers(); // front버퍼와 back버퍼를 swapping 하기 위한것, 프론트버퍼내용이 화면에 뿌려지는 동안 새로운 내용이 백버퍼에 쓰이고 백버퍼에 기록이 다 되면 프론트와 백이 바뀐다.
    //백버퍼에 그림을 다 그렸으면 전면버퍼와 통째로 교체한다. 전면과 후면이 일시에 교체되므로 백버퍼에 미리 준비해둔 그림이 나타난다.
 //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 빼도 상관없는듯?
 }
 
-int space_flag = 0;
+
 
 void KeyboardCallback(unsigned char ch, int x, int y)
 {
@@ -462,42 +483,11 @@ void MouseCallback(int button, int state, int x, int y)
    glutPostRedisplay();
 }
 
-// rotate 필요가 없어서 제거함
-//void rotate(int id)
-//{
-//   glMatrixMode(GL_MODELVIEW); //모델뷰 모드로 사용하겠다.
-//   glPushMatrix(); // 현재 행렬 저장
-//   glLoadIdentity(); // 단위행렬로 초기화 (위의 현재행렬과 다름)
-//
-//    //gluLookAt(0,0,0, 0,1,0, 0,0,1); // 카메라 시점이 +y를 바라보도록 함. 시점의 머리가 +z를 향하도록함
-//   //glRotated(((double)180), 0.0, 0.0, 1.0); //단위행렬로 초기화된걸 rotate연산, x축으로 rotate_x만큼 회전
-////   glRotated(((double)rotate_x), 0.0, 1.0, 0.0); // 마찬가지
-//                                     // https://m.blog.naver.com/pkk1113/220368099954 참고
-//
-//   if (id < NO_SPHERE) {
-//      glGetDoublev(GL_MODELVIEW_MATRIX, g_sphere[id].m_mRotate); //매트릭스 종류, 값을 받을 메트릭스, 즉 modelview_matrix종류의 g_sphere...에 바로 위에서 rotate한 행렬을 받아오겠다.
-//   }
-//
-//   if (id == WALL_ID) {
-//      glGetDoublev(GL_MODELVIEW_MATRIX, g_wall.m_mRotate);
-//
-//        for(int i = 0; i < 4; i++) glGetDoublev(GL_MODELVIEW_MATRIX, boundary_wall[i].m_mRotate); // test_wall 그리기
-//   }
-//
-//   glPopMatrix();
-//}
 
-//추가해야함 int k=0;
 
 void MotionCallback(int x, int y) { // 구현이 다름
    int tdx = x - downX, tdy = -(y - downY), tdz = 0, id = 0;
-   /*
-   if (leftButton) { //왼쪽마우스를 누르면 벽과 구를 회전, 여길 없애면 마우스 눌러서 화면전환 안할수 있음
-      rotate_x += x - downX;
-      rotate_y += y - downY;
-      for (i = 0; i < NO_SPHERE; i++) rotate(i);
-      rotate(WALL_ID);
-   }*/
+   
    if (rightButton) { // 붉은공의 위치변경, 이부분을 잘 만지면 arkanoid에서 흰색공 위치 조절 가능
       if (space_flag == 0)
       {
@@ -531,10 +521,6 @@ void initRotate() { // 구현이 살짝 다름 initGL에서 호출
    g_wall.init();
    for (int i = 0; i < 4; i++) boundary_wall[i].init();
 
-   // rotate 필요없어서 제거함
-   //    // 초기에 공과 벽을 z축을 중심으로 한 번 회전시켜 위에서 아래로 내려보는 것 처럼 만든다
-   //   for (i = 0; i < NO_SPHERE; i++) rotate(i);
-   //   rotate(WALL_ID);
 }
 
 void InitGL() {
@@ -642,6 +628,11 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
          {
             g_sphere[0].hitBy(g_sphere[idx]);
             temp_time = currentTime;
+            if (idx != 1) { //하얀공 말고 다른공 맞으면 점수 추가
+                g_sphere[idx].appear = false;
+                g_sphere[idx].setCenter(500, 500, 500); //닿은 공은 멀리 유배보냄
+                Score += 1;
+            }
          }
          // 밑에 코드는 충돌된 공의 z 좌표를 100으로 설정하여 화면 밖으로 나가게 한다. 즉, 화면상에서 공을 없애는 효과
          //if (idx != 1)
@@ -660,9 +651,9 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
 void InitObjects()
 {
    // specify initial colors and center positions of each spheres
-   g_sphere[0].setColor(0.8, 0.2, 0.2); g_sphere[0].setCenter(0.0, -6.0, 0.0);
-   g_sphere[1].setColor(0.8, 0.8, 0.8); g_sphere[1].setCenter(0.0, -8.0, 0.0);
-   g_sphere[2].setColor(0.2, 0.2, 0.8); g_sphere[2].setCenter(0.0, 0.0, 0.0);
+   g_sphere[0].setColor(0.8, 0.2, 0.2); g_sphere[0].setCenter(0.0, -6.0, 0.0); //빨간공
+   g_sphere[1].setColor(0.8, 0.8, 0.8); g_sphere[1].setCenter(0.0, -8.0, 0.0); //하얀공
+   g_sphere[2].setColor(0.2, 0.2, 0.8); g_sphere[2].setCenter(0.0, 0.0, 0.0); //이하 표적공
    g_sphere[3].setColor(0.2, 0.2, 0.8); g_sphere[3].setCenter(1.3, 0.0, 0.0);
    g_sphere[4].setColor(0.2, 0.2, 0.8); g_sphere[4].setCenter(2.6, 0.0, 0.0);
    g_sphere[5].setColor(0.2, 0.2, 0.8); g_sphere[5].setCenter(3.9, 1.0, 0.0);
