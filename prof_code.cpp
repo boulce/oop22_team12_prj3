@@ -19,7 +19,7 @@ const int WALL_HIGHT=16;
 /*추가해야함
 int rotate_x=180, rotate_y=80;
 int choice=2;*/
-const int rotate_x = 90; // 초기 initRotate에서 공과 평면이 회전하는 각도, x축으로 90도 회전하도록 한다.
+//const int rotate_x = 90; // 초기 initRotate에서 공과 평면이 회전하는 각도, x축으로 90도 회전하도록 한다.
 //const int rotate_y = 90;
 
 const float planeWidth = 10; // plane 가로
@@ -121,14 +121,14 @@ public:
 	}
     
     // 수정되지 않은 다른 사람의 hasIntersected, 공이 끼지 않게 하려면 개선해야함
-    bool hasIntersected(float x, float z)
+    bool hasIntersected(float x, float y)
     {
         float deltaX;
-        float deltaZ;
+        float deltaY;
         
         deltaX = this->center_x - x;
-        deltaZ = this->center_z - z;
-        if (sqrt(deltaX * deltaX + deltaZ * deltaZ) <= 0.85)
+        deltaY = this->center_y - y;
+        if (sqrt(deltaX * deltaX + deltaY * deltaY) <= 0.85)
             return (true);
         return (false);
     }
@@ -137,77 +137,31 @@ public:
     void hitBy(CSphere hitSphere)
     {
         float deltaX = hitSphere.center_x - this->center_x;
-        float deltaZ = hitSphere.center_z - this->center_z;
-        float distance = sqrt(deltaX * deltaX + deltaZ * deltaZ);
+        float deltaY = hitSphere.center_y - this->center_y;
+        float distance = sqrt(deltaX * deltaX + deltaY * deltaY);
         
         float k_x = deltaX / distance;
-        float k_z = deltaZ / distance;
+        float k_y = deltaY / distance;
         float v_x = -velocity_x;
-        float v_z = -velocity_z;
+        float v_y = -velocity_y;
         
-        float original_speed = sqrt(v_x*v_x + v_z*v_z);
+        float original_speed = sqrt(v_x*v_x + v_y*v_y);
         float new_speed;
-        velocity_x = v_x + 2 * ((k_x * v_x) + (k_z * v_z)) * k_x;
-        velocity_z = v_z + 2 * ((k_x * v_x) + (k_z * v_z)) * k_z;
+        velocity_x = v_x + 2 * ((k_x * v_x) + (k_y * v_y)) * k_x;
+        velocity_y = v_y + 2 * ((k_x * v_x) + (k_y * v_y)) * k_y;
         
-        new_speed = sqrt(velocity_x*velocity_x + velocity_z*velocity_z);
+        new_speed = sqrt(velocity_x*velocity_x + velocity_y*velocity_y);
         
         velocity_x *= original_speed / new_speed;
-        velocity_z *= original_speed / new_speed;
+        velocity_y *= original_speed / new_speed;
+        
+        // 구와 구끼리 충돌시 끼임 문제 해결 부분
+        // 구끼리 부딪혀서 방향이 바뀌었는데 끼어있으면, 반사 속도 방향으로 x 성분과 y 성분의 위치를 끼임이 해결될 때까지 0.1씩 바꾼다.
+        while(hasIntersected(hitSphere.center_x, hitSphere.center_y)){
+            center_x += velocity_x / sqrt(velocity_x*velocity_x) * 0.1;
+            center_y += velocity_y / sqrt(velocity_y*velocity_y) * 0.1;
+        }
     }
-	/*추가해야함 
-	bool hasIntersected(float x, float z)
-	{
-		float deltaX;
-		float deltaZ;
-
-		deltaX = this->center_x - x;
-		deltaZ = this->center_z - z;
-		if (sqrt(deltaX * deltaX + deltaZ * deltaZ) <= 0.85)
-			return (true);
-		return (false);
-	}
-	int currentTime, previousTime = -1;
-
-	void hitBy(CSphere hitSphere)
-	{
-		float deltaX;
-		float deltaZ;
-		float distance;
-		float hit_angle;
-		float temp;
-
-		deltaX = hitSphere.center_x - this->center_x;
-		deltaZ = hitSphere.center_z - this->center_z;
-
-		distance = sqrt(deltaX * deltaX + deltaZ * deltaZ);
-		hit_angle = acosf(deltaX / distance);
-		temp = cos(hit_angle) * dir_x - sin(hit_angle) * dir_z;
-		dir_z = sin(hit_angle) * dir_x + cos(hit_angle) * dir_z;
-		dir_x = temp;
-
-		//        if (deltaZ > 0)
-		//            hit_angle = M_PI + M_PI - hit_angle;
-				// 두 구가 서로 끼이는 것을 방지! 끼이면 살짝 먼 곳으로 움직이던 구를 옮겨준다.
-		while (get_distance(this->center_x + 0.03 * 3 * dir_x, hitSphere.center_x, this->center_z + 0.03 * 3 * dir_z, hitSphere.center_z) < 0.85) {
-
-			temp = cos(hit_angle) * dir_x - sin(hit_angle) * dir_z;
-			dir_z = sin(hit_angle) * dir_x + cos(hit_angle) * dir_z;
-			dir_x = temp;
-			if (get_distance(this->center_x + 0.03 + 0.03 * 3 * dir_x, hitSphere.center_x, this->center_z + 0.03 + 0.03 * 3 * dir_z, hitSphere.center_z) > get_distance(this->center_x - 0.03 + 0.03 * 3 * dir_x, hitSphere.center_x, this->center_z - 0.03 + 0.03 * 3 * dir_z, hitSphere.center_z))
-			{
-				this->center_x += 0.03;
-				this->center_z += 0.03;
-			}
-			else
-			{
-				this->center_x -= 0.03;
-				this->center_z -= 0.03;
-			}
-		}
-		//std::cout << timeDelta << std::endl;
-	}
-	*/
 	void draw()
 	{
 		glLoadIdentity(); //단위행렬로 초기화
@@ -328,46 +282,91 @@ public:
 		}
 	}
 	
-    // 다른 사람 코드 그대로 가져옴 수정 필요
+    // 윗 방향 벽과 충돌 감지
 	bool hasUpIntersected(CSphere* sphere)
 	{
-		if (sphere->center_z + 0.425 >= planeHeight / 2 || sphere->center_z - 0.425 <= -1 * planeHeight / 2)
+		if (sphere->center_y + 0.5 >= planeHeight / 2)
 			return (true);
 		return (false);
 	}
     
-    // 다른 사람 코드 그대로 가져옴 수정 필요
-	bool hasRightLeftIntersected(CSphere* sphere)
+    // 아래 방향 벽과 충돌 감지
+    bool hasDownIntersected(CSphere* sphere){
+        if (sphere->center_y - 0.5 <= -1 * planeHeight / 2)
+            return (true);
+        return (false);
+    }
+    
+    // 왼쪽 방향 벽과 충돌 감지
+    bool hasLeftIntersected(CSphere* sphere){
+        if (sphere->center_x - 0.5 <= -1 * planeWidth / 2)
+            return (true);
+        return (false);
+    }
+    
+    // 오른쪽 방향 벽과 충돌 감지
+	bool hasRightIntersected(CSphere* sphere)
 	{
-		if (sphere->center_x + 0.425 >= planeWidth / 2 || sphere->center_x - 0.425 <= -1 * planeWidth / 2)
+		if (sphere->center_x + 0.5 >= planeWidth / 2)
 			return (true);
 		return (false);
 	}
     
-    // 다른 사람 코드 그대로 가져옴 수정 필요
+    
 	void hitBy(CSphere* sphere)
 	{
 		if (hasUpIntersected(sphere))
 		{
-			sphere->velocity_z = -(sphere->velocity_z);
+			sphere->velocity_y = -(sphere->velocity_y);
+            
+            // 구와 벽끼리 충돌시 끼임 문제 해결 부분
+            // 구와 벽이 부딪혀서 구의 방향이 바뀌었는데 끼어있으면, 반사 방향으로 x 성분과 y 성분의 위치를 끼임이 해결될 때까지 0.1씩 바꾼다.
+            while(hasUpIntersected(sphere)){
+                sphere->center_y -= 0.1;
+            }
 		}
-		else if (hasRightLeftIntersected(sphere))
+        else if(hasDownIntersected(sphere)){
+            sphere->velocity_y = -(sphere->velocity_y);
+            
+            // 구와 벽끼리 충돌시 끼임 문제 해결 부분
+            // 구와 벽이 부딪혀서 구의 방향이 바뀌었는데 끼어있으면, 반사 방향으로 x 성분과 y 성분의 위치를 끼임이 해결될 때까지 0.1씩 바꾼다.
+            while(hasDownIntersected(sphere)){
+                sphere->center_y += 0.1;
+            }
+        }
+		else if (hasLeftIntersected(sphere))
 		{
 			sphere->velocity_x = -(sphere->velocity_x);
+            
+            // 구와 벽끼리 충돌시 끼임 문제 해결 부분
+            // 구와 벽이 부딪혀서 구의 방향이 바뀌었는데 끼어있으면, 반사 방향으로 x 성분과 y 성분의 위치를 끼임이 해결될 때까지 0.1씩 바꾼다.
+            while(hasLeftIntersected(sphere)){
+                sphere->center_x += 0.1;
+            }
 		}
+        else if (hasRightIntersected(sphere))
+        {
+            sphere->velocity_x = -(sphere->velocity_x);
+            
+            // 구와 벽끼리 충돌시 끼임 문제 해결 부분
+            // 구와 벽이 부딪혀서 구의 방향이 바뀌었는데 끼어있으면, 반사 방향으로 x 성분과 y 성분의 위치를 끼임이 해결될 때까지 0.1씩 바꾼다.
+            while(hasRightIntersected(sphere)){
+                sphere->center_x -= 0.1;
+            }
+        }
 	}
 
 
 };
 
 
-/*추가해야함 
+/*추가해야함
 CSphere g_sphere[NO_SPHERE];
 CWall g_wall(WALL_WIDTH, 0.2, WALL_HIGHT);
 */
 
 CSphere g_sphere[3]; // 공 배열
-CWall g_wall(planeWidth, planeDepth, planeHeight); // 바닥 평면
+CWall g_wall(planeWidth, planeHeight, planeDepth); // 바닥 평면
 CWall boundary_wall[4]; // 가장자리 벽
 
 void ReshapeCallback(int width, int height)
@@ -409,11 +408,11 @@ void ReshapeCallback(int width, int height)
 
 void DisplayCallback(void)
 {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //glclear는 버퍼들을 미리설정된 값으로 바꾼다.	
-														//GL_COLOR_BUFFER_BIT는 initgl의 glclearcolor에서 설정된 값이다. 
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //glclear는 버퍼들을 미리설정된 값으로 바꾼다.
+														//GL_COLOR_BUFFER_BIT는 initgl의 glclearcolor에서 설정된 값이다.
 														//한편 3차원을 2차원에 그리기위해 depth라는 개념이 있다. 같은 x,y라도 depth차이에 따라 그려지고 말고가 정해진다.
 														//이 줄 자체가 하나의 관용구 비슷하게 쓰이는데, 3차원그림 전체를 지우는 역할을 한다.
-	glMatrixMode(GL_MODELVIEW); 
+	glMatrixMode(GL_MODELVIEW);
 
 
 
@@ -450,6 +449,7 @@ void KeyboardCallback(unsigned char ch, int x, int y)
 		exit(0);
 		break;
 	}
+    
 	glutPostRedisplay();
 }
 
@@ -462,32 +462,35 @@ void MouseCallback(int button, int state, int x, int y)
 	glutPostRedisplay();
 }
 
-void rotate(int id)
-{
-	glMatrixMode(GL_MODELVIEW); //모델뷰 모드로 사용하겠다.
-	glPushMatrix(); // 현재 행렬 저장
-	glLoadIdentity(); // 단위행렬로 초기화 (위의 현재행렬과 다름)
-
-	glRotated(((double)rotate_x), 1.0, 0.0, 0.0); //단위행렬로 초기화된걸 rotate연산, x축으로 rotate_x만큼 회전
-//	glRotated(((double)rotate_x), 0.0, 1.0, 0.0); // 마찬가지
-
-	if (id < NO_SPHERE) {
-		glGetDoublev(GL_MODELVIEW_MATRIX, g_sphere[id].m_mRotate); //매트릭스 종류, 값을 받을 메트릭스, 즉 modelview_matrix종류의 g_sphere...에 바로 위에서 rotate한 행렬을 받아오겠다. 
-	}
-
-	if (id == WALL_ID) {
-		glGetDoublev(GL_MODELVIEW_MATRIX, g_wall.m_mRotate);
-        
-        for(int i = 0; i < 4; i++) glGetDoublev(GL_MODELVIEW_MATRIX, boundary_wall[i].m_mRotate); // test_wall 그리기
-	}
-
-	glPopMatrix();
-}
+// rotate 필요가 없어서 제거함
+//void rotate(int id)
+//{
+//	glMatrixMode(GL_MODELVIEW); //모델뷰 모드로 사용하겠다.
+//	glPushMatrix(); // 현재 행렬 저장
+//	glLoadIdentity(); // 단위행렬로 초기화 (위의 현재행렬과 다름)
+//
+//    //gluLookAt(0,0,0, 0,1,0, 0,0,1); // 카메라 시점이 +y를 바라보도록 함. 시점의 머리가 +z를 향하도록함
+//	//glRotated(((double)180), 0.0, 0.0, 1.0); //단위행렬로 초기화된걸 rotate연산, x축으로 rotate_x만큼 회전
+////	glRotated(((double)rotate_x), 0.0, 1.0, 0.0); // 마찬가지
+//                                     // https://m.blog.naver.com/pkk1113/220368099954 참고
+//
+//	if (id < NO_SPHERE) {
+//		glGetDoublev(GL_MODELVIEW_MATRIX, g_sphere[id].m_mRotate); //매트릭스 종류, 값을 받을 메트릭스, 즉 modelview_matrix종류의 g_sphere...에 바로 위에서 rotate한 행렬을 받아오겠다.
+//	}
+//
+//	if (id == WALL_ID) {
+//		glGetDoublev(GL_MODELVIEW_MATRIX, g_wall.m_mRotate);
+//
+//        for(int i = 0; i < 4; i++) glGetDoublev(GL_MODELVIEW_MATRIX, boundary_wall[i].m_mRotate); // test_wall 그리기
+//	}
+//
+//	glPopMatrix();
+//}
 
 //추가해야함 int k=0;
 
 void MotionCallback(int x, int y) { // 구현이 다름
-	int tdx = x - downX, tdy = 0, tdz = y - downY, id = choice - 1;
+	int tdx = x - downX, tdy = -(y - downY), tdz = 0, id = choice - 1;
 	/*
 	if (leftButton) { //왼쪽마우스를 누르면 벽과 구를 회전, 여길 없애면 마우스 눌러서 화면전환 안할수 있음
 		rotate_x += x - downX;
@@ -507,11 +510,12 @@ void initRotate() { // 구현이 살짝 다름 initGL에서 호출
 	g_sphere[1].init();
 	g_sphere[2].init();
 	g_wall.init();
-
     for(int i = 0; i < 4; i++) boundary_wall[i].init();
-    // 초기에 공과 벽을 z축을 중심으로 한 번 회전시켜 위에서 아래로 내려보는 것 처럼 만든다
-	for (i = 0; i < NO_SPHERE; i++) rotate(i);
-	rotate(WALL_ID);
+    
+// rotate 필요없어서 제거함
+//    // 초기에 공과 벽을 z축을 중심으로 한 번 회전시켜 위에서 아래로 내려보는 것 처럼 만든다
+//	for (i = 0; i < NO_SPHERE; i++) rotate(i);
+//	rotate(WALL_ID);
 }
 
 void InitGL() {
@@ -531,11 +535,7 @@ void InitGL() {
 	glColorMaterial(GL_FRONT, GL_DIFFUSE);
 	glLightfv(GL_LIGHT0, GL_POSITION, light0Position);
 	glEnable(GL_LIGHT0);
-	initRotate(); //구와 wall의 init호출
-
-
-
-
+    initRotate(); //구와 wall의 init호출
 
 	glShadeModel(GL_SMOOTH);
 	glEnable(GL_LIGHTING);
@@ -605,7 +605,7 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
 	float y = g_sphere[0].center_y;
 	float z = g_sphere[0].center_z;
 
-	if (space_flag) g_sphere[0].setCenter( 
+	if (space_flag) g_sphere[0].setCenter(
 		x + timeDelta * 0.002 * g_sphere[0].velocity_x, // 속도의 성분이 1일때, 구는 timeDelta 당 0.002만큼 움직인다.
 		y + timeDelta * 0.002 * g_sphere[0].velocity_y,
 		z + timeDelta * 0.002 * g_sphere[0].velocity_z);
@@ -617,7 +617,7 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
     idx = 1;
     temp_time = -1;
     while (idx < NO_SPHERE) {
-        if (g_sphere[0].hasIntersected(g_sphere[idx].center_x, g_sphere[idx].center_z) == true)
+        if (g_sphere[0].hasIntersected(g_sphere[idx].center_x, g_sphere[idx].center_y) == true)
         {
             if (temp_time + 1 < currentTime)
             {
@@ -635,35 +635,36 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
     g_wall.hitBy(&g_sphere[0]);
     
 	previousTime = currentTime;
+    std::cout << g_sphere[0].center_x << ' ' << g_sphere[0].center_y << ' ' << g_sphere[0].center_z << '\n';
 }
 
 void InitObjects()
 {
 	// specify initial colors and center positions of each spheres
-	g_sphere[0].setColor(0.8, 0.2, 0.2); g_sphere[0].setCenter(0.0, 0.0, 0.0);
-	g_sphere[1].setColor(0.2, 0.8, 0.2); g_sphere[1].setCenter(2.0, 0.0, 0.0);
-	g_sphere[2].setColor(0.2, 0.2, 0.8); g_sphere[2].setCenter(0.0, 0.0, 2.0);
+	g_sphere[0].setColor(0.8, 0.2, 0.2); g_sphere[0].setCenter(0.0, 0.0, 1.0);
+	g_sphere[1].setColor(0.2, 0.8, 0.2); g_sphere[1].setCenter(2.0, 0.0, 1.0);
+	g_sphere[2].setColor(0.2, 0.2, 0.8); g_sphere[2].setCenter(0.0, 2.0, 1.0);
 
 	// specify initial colors and center positions of a wall
-	g_wall.setColor(0.0, 1.0, 0.0); g_wall.setCenter(0.0, -0.6, 0.0);
+	g_wall.setColor(0.0, 1.0, 0.0); g_wall.setCenter(0.0, 0.0, -0.6);
     
-    boundary_wall[0].setSize(planeWidth, 1, 0.1);
+    boundary_wall[0].setSize(planeWidth, 0.1, 1);
     boundary_wall[0].setColor(0.0, 0.0, 0.0);
-    boundary_wall[1].setSize(planeWidth, 1, 0.1);
+    boundary_wall[1].setSize(planeWidth, 0.1, 1);
     boundary_wall[1].setColor(0.0, 0.0, 0.0);
-    boundary_wall[2].setSize(0.1, 1, planeHeight);
+    boundary_wall[2].setSize(0.1, planeHeight, 1);
     boundary_wall[2].setColor(0.0, 0.0, 0.0);
-    boundary_wall[3].setSize(0.1, 1, planeHeight);
+    boundary_wall[3].setSize(0.1, planeHeight, 1);
     boundary_wall[3].setColor(0.0, 0.0, 0.0);
     
-    boundary_wall[0].setCenter(0.0, 0.0, planeHeight/2); // 위쪽 가장자리 벽
-    boundary_wall[1].setCenter(0.0, 0.0, -(planeHeight/2)); // 아래쪽 가장자리 벽
+    boundary_wall[0].setCenter(0.0, planeHeight/2, 0.0); // 위쪽 가장자리 벽
+    boundary_wall[1].setCenter(0.0, -(planeHeight/2), 0.0); // 아래쪽 가장자리 벽
     boundary_wall[2].setCenter(planeWidth/2, 0.0, 0.0); // 오른쪽 가장자리 벽
     boundary_wall[3].setCenter(-(planeWidth/2), 0.0, 0.0); // 왼쪽 가장자리 벽
 
 }
 
-// 추가해야함 using namespace std; 
+// 추가해야함 using namespace std;
 int main(int argc, char** argv)
 {
 	glutInit(&argc, argv); // glut 시작 초기화, 보통 그래픽못쓰는데서 한다거나 하면 오류 감지용
