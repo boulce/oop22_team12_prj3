@@ -277,7 +277,21 @@ public:
    // 아래 방향 벽과 충돌 감지
    bool hasDownIntersected(CSphere* sphere) {
       if (sphere->center_y - 0.5 <= -1 * planeHeight / 2)
-         return (true);
+      {
+          sphere->center_x = 0.0;
+          sphere->center_y = -6.0;
+          sphere->center_z = 0.0;
+
+          sphere[1].center_x = 0.0;
+          sphere[1].center_y = -8.0;
+          sphere[1].center_z = 0.0;
+
+          sphere->velocity_x = 0.0;
+          sphere->velocity_y = 0.0;
+          sphere->velocity_z = 0.0;
+
+          return (true);
+      }
       return (false);
    }
 
