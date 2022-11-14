@@ -1,25 +1,15 @@
 //* Simple geometry viewer:  Left mouse: rotate;  Right mouse:   translate;  ESC to quit. */
-#include <assert.h>
+#define GL_SILENCE_DEPRECATION
 #include <math.h>
 #include <stdlib.h>
-//추가해야함 #include <iostream>
-#include <GL/glut.h>
 #include <iostream>
 #include <string>
-// you may try "#include <GL/glut.h>" if "#include <GLUT/glut.h>" wouldn't work
-//#include <GL/glut.h>
+#include <GLUT/glut.h>
 
 //GLdouble rotMatrix[4][16];
-//추가해야함 const int NO_SPHERE = 17;
 const int NO_SPHERE = 32; // g_sphere[]의 구의 개수
 const int WALL_ID = 1000;
-/* 추가해야함
-const int WALL_WIDTH=16;
-const int WALL_HIGHT=16;
-*/
-/*추가해야함
-int rotate_x=180, rotate_y=80;
-int choice=2;*/
+
 //const int rotate_x = 90; // 초기 initRotate에서 공과 평면이 회전하는 각도, x축으로 90도 회전하도록 한다.
 //const int rotate_y = 90;
 
@@ -61,7 +51,6 @@ int cubeIndices[][4] = {
 float sdepth = 20; //멀리서보는지 가까이서 보는지
 float zNear = 1.0, zFar = 100.0;
 float aspect = 5.0 / 4.0;
-float xcam = 0, ycam = 0;
 long xsize, ysize;
 int downX, downY;
 bool leftButton = false, middleButton = false, rightButton = false;
@@ -69,8 +58,8 @@ int i, j;
 GLfloat light0Position[] = { 0, 1, 0, 1.0 };
 int displayMenu, mainMenu;
 
-int Score=0;
-int Life=5; 
+int Score = 0;
+int Life = 5;
 
 void MyIdleFunc(void) { glutPostRedisplay(); } /* things to do while idle */
 void RunIdleFunc(void) { glutIdleFunc(MyIdleFunc); }
@@ -95,9 +84,9 @@ class CSphere
 public:
    float center_x, center_y, center_z;
    float color_r, color_g, color_b;
-   float velocity_x, velocity_y, velocity_z; // 공의 x, y, z축 성분 속도
+   float dir_x, dir_y, dir_z; // 공의 x, y, z축 성분 속도
    float speed;
-   bool appear=true;
+   bool appear = true;
 
 public:
    GLdouble m_mRotate[16];
@@ -126,45 +115,39 @@ public:
    }
 
    // 수정되지 않은 다른 사람의 hasIntersected, 공이 끼지 않게 하려면 개선해야함
-   bool hasIntersected(float x, float y)
+    bool hasIntersected(const CSphere &ball)
+    {
+        float deltaX = center_x - ball.center_x;
+        float deltaY = center_y - ball.center_y;
+        if (sqrt(deltaX * deltaX + deltaY * deltaY) <= 0.85)
+            return true;
+        else
+            return false;
+    }
+
+
+   void hitBy(const CSphere hitSphere)
    {
-      float deltaX;
-      float deltaY;
-
-      deltaX = this->center_x - x;
-      deltaY = this->center_y - y;
-      if (sqrt(deltaX * deltaX + deltaY * deltaY) <= 0.85)
-         return (true);
-      return (false);
-   }
-
-   // 우리가 구현한 hitBy, 공이 끼지 않게 하려면 개선해야함
-   void hitBy(CSphere hitSphere) // g_sphere[0].hitBy(g_sphere[idx]); this하면 바로 빨간 공 
-   {
-      float deltaX = hitSphere.center_x - this->center_x;
-      float deltaY = hitSphere.center_y - this->center_y;
-      float distance = sqrt(deltaX * deltaX + deltaY * deltaY);
-
-      float k_x = deltaX / distance;
-      float k_y = deltaY / distance;
-      float v_x = -velocity_x;
-      float v_y = -velocity_y;
-
-      float original_speed = sqrt(v_x * v_x + v_y * v_y);
-      float new_speed;
-      velocity_x = v_x + 2 * ((k_x * v_x) + (k_y * v_y)) * k_x;
-      velocity_y = v_y + 2 * ((k_x * v_x) + (k_y * v_y)) * k_y;
-
-      new_speed = sqrt(velocity_x * velocity_x + velocity_y * velocity_y);
-
-      velocity_x *= original_speed / new_speed;
-      velocity_y *= original_speed / new_speed;
+       float deltaX = hitSphere.center_x - center_x;
+       float deltaY = hitSphere.center_y - center_y;
+       float distance = sqrt(deltaX * deltaX + deltaY * deltaY);
+       
+       // Rodrigues' rotation formula 사용
+       // V(rot) = -v + 2(k inner_product v)k
+       float k_x = deltaX / distance;
+       float k_y = deltaY / distance;
+       float v_x = -dir_x;
+       float v_y = -dir_y;
+       float inner_product = k_x * v_x + k_y * v_y;
+       
+       dir_x = -v_x + 2 * inner_product * k_x;
+       dir_y = -v_y + 2 * inner_product * k_y;
 
       // 구와 구끼리 충돌시 끼임 문제 해결 부분
       // 구끼리 부딪혀서 방향이 바뀌었는데 끼어있으면, 반사 속도 방향으로 x 성분과 y 성분의 위치를 끼임이 해결될 때까지 0.1씩 바꾼다.
-      while (hasIntersected(hitSphere.center_x, hitSphere.center_y)) {
-          center_x += velocity_x / sqrt(velocity_x*velocity_x + velocity_y*velocity_y) * 0.1;
-          center_y += velocity_y / sqrt(velocity_x*velocity_x + velocity_y*velocity_y) * 0.1;
+      while (hasIntersected(hitSphere)) {
+          center_x += dir_x / sqrt(dir_x*dir_x + dir_y*dir_y) * 0.1;
+          center_y += dir_y / sqrt(dir_x*dir_x + dir_y*dir_y) * 0.1;
       }
 
       
@@ -176,7 +159,6 @@ public:
       glMultMatrixd(m_mRotate); // 마우스 이동에따라 motion콜백함수에서 m_mrotate행렬이 변형되는데 이 mult함수로 단위행렬에 곱하여 m_mrotate대로 회전한다.
       glTranslated(center_x, center_y, center_z); // 중앙으로 이동한다.
       glColor3f(color_r, color_g, color_b); //색 조정
-      //추가해야함 glutSoilidSphere(0.4,20,16);
       glutSolidSphere(0.5, 20, 16); //0.5의 반지름 나머지 두 인자는 구를 나타내는 경선과 위선
    }
 };
@@ -188,11 +170,6 @@ public:
    float width, height, depth;
    float center_x, center_y, center_z;
    float color_r, color_g, color_b;
-   /*float up_wall=8;
-   float left_wall=8;
-   float right_wall=-8;
-
-   */
 
    GLfloat Verts[8][3];
 
@@ -203,10 +180,10 @@ public:
       width = w; height = h; depth = d;
       color_r = 0.0; color_g = 1.0; color_b = 0.0;
 
-      int i, j;
-      float coef;
-      for (i = 0; i < 8; i++) {
-         for (j = 0; j < 3; j++) {
+
+    float coef{};
+      for (int i = 0; i < 8; i++) {
+         for (int j = 0; j < 3; j++) {
             if (j == 0) coef = w / 2.0;
             if (j == 1) coef = h / 2.0;
             if (j == 2) coef = d / 2.0;
@@ -231,10 +208,10 @@ public:
       height = h;
       depth = d;
 
-      int i, j;
-      float coef;
-      for (i = 0; i < 8; i++) {
-         for (j = 0; j < 3; j++) {
+
+       float coef{};
+      for (int i = 0; i < 8; i++) {
+         for (int j = 0; j < 3; j++) {
             if (j == 0) coef = w / 2.0;
             if (j == 1) coef = h / 2.0;
             if (j == 2) coef = d / 2.0;
@@ -324,7 +301,7 @@ public:
    {
       if (hasUpIntersected(sphere))
       {
-         sphere->velocity_y = -(sphere->velocity_y);
+         sphere->dir_y = -(sphere->dir_y);
 
          // 구와 벽끼리 충돌시 끼임 문제 해결 부분
          // 구와 벽이 부딪혀서 구의 방향이 바뀌었는데 끼어있으면, 반사 방향으로 x 성분과 y 성분의 위치를 끼임이 해결될 때까지 0.1씩 바꾼다.
@@ -333,7 +310,7 @@ public:
          }
       }
       else if (hasDownIntersected(sphere)) {
-         sphere->velocity_y = -(sphere->velocity_y);
+         sphere->dir_y = -(sphere->dir_y);
 
          // 구와 벽끼리 충돌시 끼임 문제 해결 부분
          // 구와 벽이 부딪혀서 구의 방향이 바뀌었는데 끼어있으면, 반사 방향으로 x 성분과 y 성분의 위치를 끼임이 해결될 때까지 0.1씩 바꾼다.
@@ -344,7 +321,7 @@ public:
       }
       else if (hasLeftIntersected(sphere))
       {
-         sphere->velocity_x = -(sphere->velocity_x);
+         sphere->dir_x = -(sphere->dir_x);
 
          // 구와 벽끼리 충돌시 끼임 문제 해결 부분
          // 구와 벽이 부딪혀서 구의 방향이 바뀌었는데 끼어있으면, 반사 방향으로 x 성분과 y 성분의 위치를 끼임이 해결될 때까지 0.1씩 바꾼다.
@@ -354,7 +331,7 @@ public:
       }
       else if (hasRightIntersected(sphere))
       {
-         sphere->velocity_x = -(sphere->velocity_x);
+         sphere->dir_x = -(sphere->dir_x);
 
          // 구와 벽끼리 충돌시 끼임 문제 해결 부분
          // 구와 벽이 부딪혀서 구의 방향이 바뀌었는데 끼어있으면, 반사 방향으로 x 성분과 y 성분의 위치를 끼임이 해결될 때까지 0.1씩 바꾼다.
@@ -460,9 +437,9 @@ void KeyboardCallback(unsigned char ch, int x, int y)
       if (space_flag) space_flag = 0;
       else {
          space_flag = 1;
-         g_sphere[0].velocity_x = g_sphere[1].center_x - g_sphere[0].center_x; //sphere[0]은 스페이스를 누르면 움직이는 빨간 공
-         g_sphere[0].velocity_y = g_sphere[0].center_y - g_sphere[1].center_y;
-         g_sphere[0].velocity_z = g_sphere[0].center_z;
+         g_sphere[0].dir_x = g_sphere[1].center_x - g_sphere[0].center_x; //sphere[0]은 스페이스를 누르면 움직이는 빨간 공
+         g_sphere[0].dir_y = g_sphere[0].center_y - g_sphere[1].center_y;
+          g_sphere[0].dir_z = 0;
       }
       break; // SPACE_KEY
 
@@ -603,7 +580,7 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
    int timeDelta;
    currentTime = glutGet(GLUT_ELAPSED_TIME);
    if (previousTime == -1) timeDelta = 0;
-   else timeDelta = currentTime - previousTime;
+   else timeDelta = (currentTime - previousTime) / 2;
    int temp_time;
 
    float x = g_sphere[0].center_x;
@@ -611,9 +588,9 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
    float z = g_sphere[0].center_z;
 
    if (space_flag) g_sphere[0].setCenter(
-      x + timeDelta * 0.002 * g_sphere[0].velocity_x, // 속도의 성분이 1일때, 구는 timeDelta 당 0.002만큼 움직인다.
-      y + timeDelta * 0.002 * g_sphere[0].velocity_y,
-      z + timeDelta * 0.002 * g_sphere[0].velocity_z);
+      x + timeDelta * 0.002 * g_sphere[0].dir_x, // 속도의 성분이 1일때, 구는 timeDelta 당 0.002만큼 움직인다.
+      y + timeDelta * 0.002 * g_sphere[0].dir_y,
+      z + timeDelta * 0.002 * g_sphere[0].dir_z);
    glutPostRedisplay(); // 윈도우를 다시그리도록 요청, 바로 디스플레이콜백함수(renderscene)가 호출되진 않고 메인루프(아마 glutMainloop?)에서 호출시점을 결정한다. 이게 없으면 연결이 부자연스러움
 
    // renderScene에서 공 사이의 충돌을 처리하는 부분
@@ -622,7 +599,7 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
    idx = 1;
    temp_time = -1;
    while (idx < NO_SPHERE) {
-      if (g_sphere[0].hasIntersected(g_sphere[idx].center_x, g_sphere[idx].center_y) == true)
+      if (g_sphere[0].hasIntersected(g_sphere[idx]) == true)
       {
          if (temp_time + 1 < currentTime)
          {
