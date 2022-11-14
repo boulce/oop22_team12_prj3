@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <string>
-#include <GLUT/glut.h>
+#include <GL/glut.h>
 
 //GLdouble rotMatrix[4][16];
 const int NO_SPHERE = 32; // g_sphere[]의 구의 개수
@@ -78,6 +78,17 @@ float get_distance(float x1, float x2, float z1, float z2) {
    return (ret);
 }
 */
+
+enum State {
+	GAME_START,
+	LIFE_DECREASE,
+	GAME_PLAYING,
+	GAME_OVER,
+	GAME_CLEAR
+};
+
+State statecode = GAME_START;
+
 
 class CSphere
 {
@@ -278,17 +289,6 @@ public:
    bool hasDownIntersected(CSphere* sphere) {
       if (sphere->center_y - 0.5 <= -1 * planeHeight / 2)
       {
-          sphere->center_x = 0.0;
-          sphere->center_y = -6.0;
-          sphere->center_z = 0.0;
-
-          sphere[1].center_x = 0.0;
-          sphere[1].center_y = -8.0;
-          sphere[1].center_z = 0.0;
-
-          sphere->dir_x = 0.0;
-          sphere->dir_y = 0.0;
-          sphere->dir_z = 0.0;
 
           return (true);
       }
@@ -331,7 +331,20 @@ public:
          while (hasDownIntersected(sphere)) {
             sphere->center_y += 0.1;
             Life -= 1; //아래 벽과 닿으면 Life가 깎임
+			statecode = LIFE_DECREASE;
          }
+		           sphere->center_x = 0.0;
+          sphere->center_y = -6.0;
+          sphere->center_z = 0.0;
+
+          sphere[1].center_x = 0.0;
+          sphere[1].center_y = -8.0;
+          sphere[1].center_z = 0.0;
+
+          sphere->dir_x = 0.0;
+          sphere->dir_y = 0.0;
+          sphere->dir_z = 0.0;
+
       }
       else if (hasLeftIntersected(sphere))
       {
@@ -407,7 +420,7 @@ void renderBitmapCharacter(float x, float y, float z, void* font, char* string)
         glutBitmapCharacter(font, *c);
     }
 }
-int space_flag = 2;
+
 void DisplayCallback(void)
 {
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //glclear는 버퍼들을 미리설정된 값으로 바꾼다.
@@ -428,8 +441,18 @@ void DisplayCallback(void)
 
    renderBitmapCharacter(-10, 3.8, -5, GLUT_BITMAP_TIMES_ROMAN_24, (char*)((("Score : ")+std::to_string(Score)).c_str()));
    renderBitmapCharacter(15, 3.8, -5, GLUT_BITMAP_TIMES_ROMAN_24, (char*)((("Life : ") + std::to_string(Life)).c_str()));
-   if (space_flag == 0) {
+   if (statecode==GAME_START||statecode==LIFE_DECREASE) {
        renderBitmapCharacter(2.8, -3, 5, GLUT_BITMAP_TIMES_ROMAN_24, (char*)"Space To Start"); //지금 설정이 space 누르면 멈췄다  시작하는거라 오류가 있는데 그 기능 없애면 괜찮을듯?
+   }
+
+   if (Life == 0) { //Life가 0이되면 gameover
+	   renderBitmapCharacter(2.8, -3, 5, GLUT_BITMAP_TIMES_ROMAN_24, (char*)"YOU FAILED");
+	   statecode = GAME_OVER;
+   }
+
+   if (Score == NO_SPHERE-2) { //Score가 NO_SPHERE-2여야 모든 공을맞춘 것, 테스트할때는 20을 빼는등 큰 수를 빼야할듯
+	   renderBitmapCharacter(2.8, -3, 5, GLUT_BITMAP_TIMES_ROMAN_24, (char*)"YOU WIN");
+	   statecode = GAME_CLEAR;
    }
 
    glutSwapBuffers(); // front버퍼와 back버퍼를 swapping 하기 위한것, 프론트버퍼내용이 화면에 뿌려지는 동안 새로운 내용이 백버퍼에 쓰이고 백버퍼에 기록이 다 되면 프론트와 백이 바뀐다.
@@ -441,22 +464,35 @@ void DisplayCallback(void)
 
 void KeyboardCallback(unsigned char ch, int x, int y)
 {
-   switch (ch)
-   {
-   case '1': choice = 1; break;
-   case '2': choice = 2; break;
-   case '3': choice = 3; break;
+	switch (ch)
+	{
+	case '1': choice = 1; break;
+	case '2': choice = 2; break;
+	case '3': choice = 3; break;
 
-   case 32: //스페이스바
-      if (space_flag) space_flag = 0;
-      else {
-         space_flag = 1;
-         g_sphere[0].dir_x = 0.0; //sphere[0]은 스페이스를 누르면 움직이는 빨간 공
-         g_sphere[0].dir_y = 3.0;
-         g_sphere[0].dir_z = 0.0;
-      }
-      break; // SPACE_KEY
+	case 32: {//스페이스바
 
+		switch (statecode) {
+		case GAME_START: {
+			g_sphere[0].dir_x = 0.0; //sphere[0]은 스페이스를 누르면 움직이는 빨간 공
+			g_sphere[0].dir_y = 3.0;
+			g_sphere[0].dir_z = 0.0;
+			statecode = GAME_PLAYING;
+		}
+		case LIFE_DECREASE: {
+			g_sphere[0].dir_x = 0.0; //sphere[0]은 스페이스를 누르면 움직이는 빨간 공
+			g_sphere[0].dir_y = 3.0;
+			g_sphere[0].dir_z = 0.0;
+			statecode = GAME_PLAYING;
+		}
+		default: {
+			//doing nothing
+		}
+
+
+		}
+		break;
+	}
    case 27: //ESC키
       exit(0);
       break;
@@ -480,7 +516,7 @@ void MotionCallback(int x, int y) { // 구현이 다름
    int tdx = x - downX, tdy = -(y - downY), tdz = 0, id = 0;
    
    if (rightButton) { // 붉은공의 위치변경, 이부분을 잘 만지면 arkanoid에서 흰색공 위치 조절 가능
-      if (space_flag == 0)
+      if (statecode==GAME_START||statecode==LIFE_DECREASE) //게임시작단계와 라이프가 깎인 단계에서는 하얀공과 빨간공이 같이 움직임
       {
          if (id < NO_SPHERE)
          {
@@ -488,7 +524,7 @@ void MotionCallback(int x, int y) { // 구현이 다름
             g_sphere[id + 1].setCenter(g_sphere[id + 1].center_x + tdx / 100.0, g_sphere[id + 1].center_y, 0);
          }
       }
-      else
+      else //다른 단계에서는 하얀공만 움직임
       {
          if (id < NO_SPHERE)
          {
@@ -601,10 +637,12 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
    float y = g_sphere[0].center_y;
    float z = g_sphere[0].center_z;
 
-   if (space_flag) g_sphere[0].setCenter(
-      x + timeDelta * 0.002 * g_sphere[0].dir_x, // 속도의 성분이 1일때, 구는 timeDelta 당 0.002만큼 움직인다.
-      y + timeDelta * 0.002 * g_sphere[0].dir_y,
-      z + timeDelta * 0.002 * g_sphere[0].dir_z);
+   if (statecode == GAME_PLAYING) {
+	   g_sphere[0].setCenter(
+		   x + timeDelta * 0.008 * g_sphere[0].dir_x, // 속도의 성분이 1일때, 구는 timeDelta 당 0.002만큼 움직인다.
+		   y + timeDelta * 0.008 * g_sphere[0].dir_y,
+		   z + timeDelta * 0.008 * g_sphere[0].dir_z);
+   }
    glutPostRedisplay(); // 윈도우를 다시그리도록 요청, 바로 디스플레이콜백함수(renderscene)가 호출되진 않고 메인루프(아마 glutMainloop?)에서 호출시점을 결정한다. 이게 없으면 연결이 부자연스러움
 
    // renderScene에서 공 사이의 충돌을 처리하는 부분
@@ -625,9 +663,7 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
                 Score += 1;
             }
          }
-         // 밑에 코드는 충돌된 공의 z 좌표를 100으로 설정하여 화면 밖으로 나가게 한다. 즉, 화면상에서 공을 없애는 효과
-         //if (idx != 1)
-            //g_sphere[idx].center_z = 100;
+         
       }
       idx++;
    }
