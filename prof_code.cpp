@@ -65,19 +65,7 @@ void MyIdleFunc(void) { glutPostRedisplay(); } /* things to do while idle */
 void RunIdleFunc(void) { glutIdleFunc(MyIdleFunc); }
 void PauseIdleFunc(void) { glutIdleFunc(NULL); }
 void renderScene();
-/* 추가해야 함
-void InitObjects();
-void auto_restart_game();
-void restart_game();
-float get_distance(float x1, float x2, float z1, float z2) {
-   float deltax=x2-x1;
-   float deltaz=z2-z1;
-   float ret;
 
-   ret=sqrt(deltax*deltax+deltaz*deltaz);
-   return (ret);
-}
-*/
 
 enum State {
 	GAME_START,
@@ -97,7 +85,8 @@ public:
    float color_r, color_g, color_b;
    float dir_x, dir_y, dir_z; // 공의 x, y, z축 성분 속도
    float speed;
-   bool appear = true;
+  
+
 
 public:
    GLdouble m_mRotate[16];
@@ -290,6 +279,20 @@ public:
       if (sphere->center_y - 0.5 <= -1 * planeHeight / 2)
       {
 
+
+		  Life -= 1; //아래 벽과 닿으면 Life가 깎임
+		  statecode = LIFE_DECREASE;
+		  sphere->center_x = 0.0;
+		  sphere->center_y = -6.0;
+		  sphere->center_z = 0.0;
+
+		  sphere[1].center_x = 0.0;
+		  sphere[1].center_y = -8.0;
+		  sphere[1].center_z = 0.0;
+
+		  sphere->dir_x = 0.0;
+		  sphere->dir_y = 0.0;
+		  sphere->dir_z = 0.0;
           return (true);
       }
       return (false);
@@ -330,20 +333,9 @@ public:
          // 구와 벽이 부딪혀서 구의 방향이 바뀌었는데 끼어있으면, 반사 방향으로 x 성분과 y 성분의 위치를 끼임이 해결될 때까지 0.1씩 바꾼다.
          while (hasDownIntersected(sphere)) {
             sphere->center_y += 0.1;
-            Life -= 1; //아래 벽과 닿으면 Life가 깎임
-			statecode = LIFE_DECREASE;
+           
          }
-		           sphere->center_x = 0.0;
-          sphere->center_y = -6.0;
-          sphere->center_z = 0.0;
-
-          sphere[1].center_x = 0.0;
-          sphere[1].center_y = -8.0;
-          sphere[1].center_z = 0.0;
-
-          sphere->dir_x = 0.0;
-          sphere->dir_y = 0.0;
-          sphere->dir_z = 0.0;
+		  
 
       }
       else if (hasLeftIntersected(sphere))
@@ -432,9 +424,9 @@ void DisplayCallback(void)
 
 
    for (i = 0; i < NO_SPHERE; i++) {
-       if (g_sphere[i].appear == true) {
+       
            g_sphere[i].draw(); //공 그리기
-       }
+       
    }
    g_wall.draw(); // 벽 그리기
    for (int i = 0; i < 4; i++) boundary_wall[i].draw(); // boundary_wall 그리기
@@ -466,9 +458,6 @@ void KeyboardCallback(unsigned char ch, int x, int y)
 {
 	switch (ch)
 	{
-	case '1': choice = 1; break;
-	case '2': choice = 2; break;
-	case '3': choice = 3; break;
 
 	case 32: {//스페이스바
 
@@ -510,7 +499,60 @@ void MouseCallback(int button, int state, int x, int y)
    glutPostRedisplay();
 }
 
+void InitObjects()
+{
+	// specify initial colors and center positions of each spheres
+	g_sphere[0].setColor(0.8, 0.2, 0.2); g_sphere[0].setCenter(0.0, -6.0, 0.0); //빨간공
+	g_sphere[1].setColor(0.8, 0.8, 0.8); g_sphere[1].setCenter(0.0, -8.0, 0.0); //하얀공
+	g_sphere[2].setColor(0.2, 0.2, 0.8); g_sphere[2].setCenter(0.0, 0.0, 0.0); //이하 표적공
+	g_sphere[3].setColor(0.2, 0.2, 0.8); g_sphere[3].setCenter(1.3, 0.0, 0.0);
+	g_sphere[4].setColor(0.2, 0.2, 0.8); g_sphere[4].setCenter(2.6, 0.0, 0.0);
+	g_sphere[5].setColor(0.2, 0.2, 0.8); g_sphere[5].setCenter(3.9, 1.0, 0.0);
+	g_sphere[6].setColor(0.2, 0.2, 0.8); g_sphere[6].setCenter(3.9, 2.3, 0.0);
+	g_sphere[7].setColor(0.2, 0.2, 0.8); g_sphere[7].setCenter(3.9, 3.6, 0.0);
+	g_sphere[8].setColor(0.2, 0.2, 0.8); g_sphere[8].setCenter(3.9, 4.9, 0.0);
+	g_sphere[9].setColor(0.2, 0.2, 0.8); g_sphere[9].setCenter(3.9, 6.2, 0.0);
+	g_sphere[18].setColor(0.2, 0.2, 0.8); g_sphere[18].setCenter(3.9, 7.5, 0.0);
+	g_sphere[10].setColor(0.2, 0.2, 0.8); g_sphere[10].setCenter(2.6, 8.5, 0.0);
+	g_sphere[11].setColor(0.2, 0.2, 0.8); g_sphere[11].setCenter(1.3, 8.5, 0.0);
+	g_sphere[12].setColor(0.2, 0.2, 0.8); g_sphere[12].setCenter(0.0, 8.5, 0.0);
+	g_sphere[13].setColor(0.2, 0.2, 0.8); g_sphere[13].setCenter(-1.3, 8.5, 0.0);
+	g_sphere[14].setColor(0.2, 0.2, 0.8); g_sphere[14].setCenter(-2.6, 8.5, 0.0);
+	g_sphere[15].setColor(0.2, 0.2, 0.8); g_sphere[15].setCenter(-3.9, 7.5, 0.0);
+	g_sphere[16].setColor(0.2, 0.2, 0.8); g_sphere[16].setCenter(-3.9, 6.2, 0.0);
+	g_sphere[17].setColor(0.2, 0.2, 0.8); g_sphere[17].setCenter(-3.9, 4.9, 0.0);
+	g_sphere[19].setColor(0.2, 0.2, 0.8); g_sphere[19].setCenter(-3.9, 3.6, 0.0);
+	g_sphere[20].setColor(0.2, 0.2, 0.8); g_sphere[20].setCenter(-3.9, 2.3, 0.0);
+	g_sphere[21].setColor(0.2, 0.2, 0.8); g_sphere[21].setCenter(-3.9, 1.0, 0.0);
+	g_sphere[22].setColor(0.2, 0.2, 0.8); g_sphere[22].setCenter(-2.6, 0.0, 0.0);
+	g_sphere[23].setColor(0.2, 0.2, 0.8); g_sphere[23].setCenter(-1.3, 0.0, 0.0);
+	g_sphere[24].setColor(0.2, 0.2, 0.8); g_sphere[24].setCenter(1.5, 6.0, 0.0);
+	g_sphere[25].setColor(0.2, 0.2, 0.8); g_sphere[25].setCenter(-1.5, 6.0, 0.0);
+	g_sphere[26].setColor(0.2, 0.2, 0.8); g_sphere[26].setCenter(0.0, 2.0, 0.0);
+	g_sphere[27].setColor(0.2, 0.2, 0.8); g_sphere[27].setCenter(-1.3, 2.0, 0.0);
+	g_sphere[28].setColor(0.2, 0.2, 0.8); g_sphere[28].setCenter(1.3, 2.0, 0.0);
+	g_sphere[29].setColor(0.2, 0.2, 0.8); g_sphere[29].setCenter(2.0, 3.0, 0.0);
+	g_sphere[30].setColor(0.2, 0.2, 0.8); g_sphere[30].setCenter(-2.0, 3.0, 0.0);
+	g_sphere[31].setColor(0.2, 0.2, 0.8); g_sphere[31].setCenter(0.0, 4.2, 0.0);
 
+	// specify initial colors and center positions of a wall
+	g_wall.setColor(0.0, 1.0, 0.0); g_wall.setCenter(0.0, 0.0, -0.6);
+
+	boundary_wall[0].setSize(planeWidth, 0.1, 1);
+	boundary_wall[0].setColor(0.0, 0.0, 0.0);
+	boundary_wall[1].setSize(planeWidth, 0.1, 1);
+	boundary_wall[1].setColor(0.0, 0.0, 0.0);
+	boundary_wall[2].setSize(0.1, planeHeight, 1);
+	boundary_wall[2].setColor(0.0, 0.0, 0.0);
+	boundary_wall[3].setSize(0.1, planeHeight, 1);
+	boundary_wall[3].setColor(0.0, 0.0, 0.0);
+
+	boundary_wall[0].setCenter(0.0, planeHeight / 2, 0.0); // 위쪽 가장자리 벽
+	boundary_wall[1].setCenter(0.0, -(planeHeight / 2), 0.0); // 아래쪽 가장자리 벽
+	boundary_wall[2].setCenter(planeWidth / 2, 0.0, 0.0); // 오른쪽 가장자리 벽
+	boundary_wall[3].setCenter(-(planeWidth / 2), 0.0, 0.0); // 왼쪽 가장자리 벽
+
+}
 
 void MotionCallback(int x, int y) { // 구현이 다름
    int tdx = x - downX, tdy = -(y - downY), tdz = 0, id = 0;
@@ -532,6 +574,15 @@ void MotionCallback(int x, int y) { // 구현이 다름
          }
       }
 
+   }
+
+   if (leftButton) {
+	   if (statecode == GAME_OVER) {
+		   statecode = GAME_START;
+		   Life = 5;
+		   Score = 0;
+		   InitObjects();
+	   }
    }
 
    downX = x;   downY = y;
@@ -586,42 +637,7 @@ void InitGL() {
    glutMotionFunc(MotionCallback); // 버튼을 누른상태에서 마우스를 움직일때 작동하는 콜백함수, 아무런 버튼도 누르지 않은 상태에서 마우스를 움직이면 glutPassivemotionfunc이다.
 }
 
-/* 추가해아함
-void restart_game()
-{
-   space_flag = 0;
-   InitObjects();
-}
 
-void auto_restart_game()
-{
-   int finish_idx;
-   finish_idx = 3;
-   while (finish_idx < NO_SPHERE)
-   {
-      if (g_sphere[finish_idx].center_z == 100)
-         finish_idx++;
-      else
-         break;
-      if (finish_idx == NO_SPHERE)
-      {
-         space_flag = 0;
-         InitObjects();
-      }
-   }
-}
-
-void lose_game()
-{
-   if (g_sphere[0].center_z < -10)
-   {
-      space_flag = 0;
-   }
-}
-
-int currentTime, previousTime = -1;
-
-*/
 
 int currentTime, previousTime = -1; // 거기엔 없음
 void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호출되는 함수, glutidleFunc()에서 호출된다.
@@ -658,7 +674,7 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
             g_sphere[0].hitBy(g_sphere[idx]);
             temp_time = currentTime;
             if (idx != 1) { //하얀공 말고 다른공 맞으면 점수 추가
-                g_sphere[idx].appear = false;
+               
                 g_sphere[idx].setCenter(500, 500, 500); //닿은 공은 멀리 유배보냄
                 Score += 1;
             }
@@ -670,65 +686,13 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
 
    // 벽에 대한 반사 실행, 다른 사람 코드 그대로 가져옴
    g_wall.hitBy(&g_sphere[0]);
+   g_wall.hitBy(&g_sphere[1]);
 
    previousTime = currentTime;
-   std::cout << g_sphere[0].center_x << ' ' << g_sphere[0].center_y << ' ' << g_sphere[0].center_z << '\n';
+  std::cout << g_sphere[0].center_x << ' ' << g_sphere[0].center_y << ' ' << g_sphere[0].center_z << '\n'; //정체불명의 윤활유
 }
 
-void InitObjects()
-{
-   // specify initial colors and center positions of each spheres
-   g_sphere[0].setColor(0.8, 0.2, 0.2); g_sphere[0].setCenter(0.0, -6.0, 0.0); //빨간공
-   g_sphere[1].setColor(0.8, 0.8, 0.8); g_sphere[1].setCenter(0.0, -8.0, 0.0); //하얀공
-   g_sphere[2].setColor(0.2, 0.2, 0.8); g_sphere[2].setCenter(0.0, 0.0, 0.0); //이하 표적공
-   g_sphere[3].setColor(0.2, 0.2, 0.8); g_sphere[3].setCenter(1.3, 0.0, 0.0);
-   g_sphere[4].setColor(0.2, 0.2, 0.8); g_sphere[4].setCenter(2.6, 0.0, 0.0);
-   g_sphere[5].setColor(0.2, 0.2, 0.8); g_sphere[5].setCenter(3.9, 1.0, 0.0);
-   g_sphere[6].setColor(0.2, 0.2, 0.8); g_sphere[6].setCenter(3.9, 2.3, 0.0);
-   g_sphere[7].setColor(0.2, 0.2, 0.8); g_sphere[7].setCenter(3.9, 3.6, 0.0);
-   g_sphere[8].setColor(0.2, 0.2, 0.8); g_sphere[8].setCenter(3.9, 4.9, 0.0);
-   g_sphere[9].setColor(0.2, 0.2, 0.8); g_sphere[9].setCenter(3.9, 6.2, 0.0);
-   g_sphere[18].setColor(0.2, 0.2, 0.8); g_sphere[18].setCenter(3.9, 7.5, 0.0);
-   g_sphere[10].setColor(0.2, 0.2, 0.8); g_sphere[10].setCenter(2.6, 8.5, 0.0);
-   g_sphere[11].setColor(0.2, 0.2, 0.8); g_sphere[11].setCenter(1.3, 8.5, 0.0);
-   g_sphere[12].setColor(0.2, 0.2, 0.8); g_sphere[12].setCenter(0.0, 8.5, 0.0);
-   g_sphere[13].setColor(0.2, 0.2, 0.8); g_sphere[13].setCenter(-1.3, 8.5, 0.0);
-   g_sphere[14].setColor(0.2, 0.2, 0.8); g_sphere[14].setCenter(-2.6, 8.5, 0.0);
-   g_sphere[15].setColor(0.2, 0.2, 0.8); g_sphere[15].setCenter(-3.9, 7.5, 0.0);
-   g_sphere[16].setColor(0.2, 0.2, 0.8); g_sphere[16].setCenter(-3.9, 6.2, 0.0);
-   g_sphere[17].setColor(0.2, 0.2, 0.8); g_sphere[17].setCenter(-3.9, 4.9, 0.0);
-   g_sphere[19].setColor(0.2, 0.2, 0.8); g_sphere[19].setCenter(-3.9, 3.6, 0.0);
-   g_sphere[20].setColor(0.2, 0.2, 0.8); g_sphere[20].setCenter(-3.9, 2.3, 0.0);
-   g_sphere[21].setColor(0.2, 0.2, 0.8); g_sphere[21].setCenter(-3.9, 1.0, 0.0);
-   g_sphere[22].setColor(0.2, 0.2, 0.8); g_sphere[22].setCenter(-2.6, 0.0, 0.0);
-   g_sphere[23].setColor(0.2, 0.2, 0.8); g_sphere[23].setCenter(-1.3, 0.0, 0.0);
-   g_sphere[24].setColor(0.2, 0.2, 0.8); g_sphere[24].setCenter(1.5, 6.0, 0.0);
-   g_sphere[25].setColor(0.2, 0.2, 0.8); g_sphere[25].setCenter(-1.5, 6.0, 0.0);
-   g_sphere[26].setColor(0.2, 0.2, 0.8); g_sphere[26].setCenter(0.0, 2.0, 0.0);
-   g_sphere[27].setColor(0.2, 0.2, 0.8); g_sphere[27].setCenter(-1.3, 2.0, 0.0);
-   g_sphere[28].setColor(0.2, 0.2, 0.8); g_sphere[28].setCenter(1.3, 2.0, 0.0);
-   g_sphere[29].setColor(0.2, 0.2, 0.8); g_sphere[29].setCenter(2.0, 3.0, 0.0);
-   g_sphere[30].setColor(0.2, 0.2, 0.8); g_sphere[30].setCenter(-2.0, 3.0, 0.0);
-   g_sphere[31].setColor(0.2, 0.2, 0.8); g_sphere[31].setCenter(0.0, 4.2, 0.0);
 
-   // specify initial colors and center positions of a wall
-   g_wall.setColor(0.0, 1.0, 0.0); g_wall.setCenter(0.0, 0.0, -0.6);
-
-   boundary_wall[0].setSize(planeWidth, 0.1, 1);
-   boundary_wall[0].setColor(0.0, 0.0, 0.0);
-   boundary_wall[1].setSize(planeWidth, 0.1, 1);
-   boundary_wall[1].setColor(0.0, 0.0, 0.0);
-   boundary_wall[2].setSize(0.1, planeHeight, 1);
-   boundary_wall[2].setColor(0.0, 0.0, 0.0);
-   boundary_wall[3].setSize(0.1, planeHeight, 1);
-   boundary_wall[3].setColor(0.0, 0.0, 0.0);
-
-   boundary_wall[0].setCenter(0.0, planeHeight / 2, 0.0); // 위쪽 가장자리 벽
-   boundary_wall[1].setCenter(0.0, -(planeHeight / 2), 0.0); // 아래쪽 가장자리 벽
-   boundary_wall[2].setCenter(planeWidth / 2, 0.0, 0.0); // 오른쪽 가장자리 벽
-   boundary_wall[3].setCenter(-(planeWidth / 2), 0.0, 0.0); // 왼쪽 가장자리 벽
-
-}
 
 // 추가해야함 using namespace std;
 int main(int argc, char** argv)
