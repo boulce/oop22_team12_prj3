@@ -286,9 +286,9 @@ public:
           sphere[1].center_y = -8.0;
           sphere[1].center_z = 0.0;
 
-          sphere->velocity_x = 0.0;
-          sphere->velocity_y = 0.0;
-          sphere->velocity_z = 0.0;
+          sphere->dir_x = 0.0;
+          sphere->dir_y = 0.0;
+          sphere->dir_z = 0.0;
 
           return (true);
       }
@@ -451,9 +451,9 @@ void KeyboardCallback(unsigned char ch, int x, int y)
       if (space_flag) space_flag = 0;
       else {
          space_flag = 1;
-         g_sphere[0].dir_x = g_sphere[1].center_x - g_sphere[0].center_x; //sphere[0]은 스페이스를 누르면 움직이는 빨간 공
-         g_sphere[0].dir_y = g_sphere[0].center_y - g_sphere[1].center_y;
-          g_sphere[0].dir_z = 0;
+         g_sphere[0].dir_x = 0.0; //sphere[0]은 스페이스를 누르면 움직이는 빨간 공
+         g_sphere[0].dir_y = 3.0;
+         g_sphere[0].dir_z = 0.0;
       }
       break; // SPACE_KEY
 
