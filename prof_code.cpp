@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <string>
-#include <GL/glut.h>
+#include <GLUT/glut.h>
 
 //GLdouble rotMatrix[4][16];
 const int NO_SPHERE = 32; // g_sphere[]의 구의 개수
@@ -647,7 +647,6 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
    currentTime = glutGet(GLUT_ELAPSED_TIME);
    if (previousTime == -1) timeDelta = 0;
    else timeDelta = (currentTime - previousTime) / 2;
-   int temp_time;
 
    float x = g_sphere[0].center_x;
    float y = g_sphere[0].center_y;
@@ -665,21 +664,15 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
    // 공이 닿는 지점을 검사하고, 닿았을 경우 반사를 실행
    int idx;
    idx = 1;
-   temp_time = -1;
    while (idx < NO_SPHERE) {
       if (g_sphere[0].hasIntersected(g_sphere[idx]) == true)
       {
-         if (temp_time + 1 < currentTime)
-         {
             g_sphere[0].hitBy(g_sphere[idx]);
-            temp_time = currentTime;
             if (idx != 1) { //하얀공 말고 다른공 맞으면 점수 추가
                
                 g_sphere[idx].setCenter(500, 500, 500); //닿은 공은 멀리 유배보냄
                 Score += 1;
             }
-         }
-         
       }
       idx++;
    }
@@ -689,7 +682,7 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
    g_wall.hitBy(&g_sphere[1]);
 
    previousTime = currentTime;
-  std::cout << g_sphere[0].center_x << ' ' << g_sphere[0].center_y << ' ' << g_sphere[0].center_z << '\n'; //정체불명의 윤활유
+  //std::cout << g_sphere[0].center_x << ' ' << g_sphere[0].center_y << ' ' << g_sphere[0].center_z << '\n'; //정체불명의 윤활유
 }
 
 
