@@ -6,16 +6,53 @@
 #include <string>
 #include <GLUT/glut.h>
 
-//GLdouble rotMatrix[4][16];
-const int NO_SPHERE = 32; // g_sphere[]의 구의 개수
+const float planeWidth = 40; // plane 가로
+const float planeHeight = 30; // plane 세로
+const float planeDepth = 0.2; // plane 두께
 const int WALL_ID = 1000;
 
-//const int rotate_x = 90; // 초기 initRotate에서 공과 평면이 회전하는 각도, x축으로 90도 회전하도록 한다.
-//const int rotate_y = 90;
+const int NO_SPHERE = planeWidth*planeHeight; // target_sphere[]의 구의 최대 개수
+int cnt_placed_sphere = 0; // 배치에 의해 만들어지는 실제 target_sphere[]의 구의 개수
+const float radius_sphere = 0.5;
 
-const float planeWidth = 10; // plane 가로
-const float planeHeight = 20; // plane 세로
-const float planeDepth = 0.2; // plane 두께
+const float control_sphere_init_x = 0; // 시작 때, 흰 공의 x 좌표
+const float control_sphere_init_y = -13.0; // 시작 때, 흰 공의 y좌표
+
+const float hit_sphere_init_x = 0; // 시작 때, 빨간 공의 x 좌표
+const float hit_sphere_init_y = control_sphere_init_y + 2*radius_sphere + 1; // 시작 때 빨간 공의 y 좌표
+
+const std::string sphere_place[(int)planeHeight] ={ // 가로 길이는 planeWidth, 세로 길이는 planeWidth; '.'이면 빈 배치, '.'이 아니면 공을 배치한다
+    "........................................",
+    "........................................",
+    "........o.....o..........o.....o........",
+    "........ooooooo..........ooooooo........",
+    "........o.....o..........o.....o........",
+    "........ooooooo..........ooooooo........",
+    "...........o................o...........",
+    ".....ooooooooooooo....ooooooooooooo.....",
+    "........................................",
+    "..........ooo..............ooo..........",
+    ".........o...o............o...o.........",
+    ".........o...o............o...o.........",
+    "..........ooo..............ooo..........",
+    "........................................",
+    "........................................",
+    "........................................",
+    "..........ooo.....ooo.....oooo..........",
+    ".........o...o...o...o...o....o.........",
+    ".........o...o...o...o...o....o.........",
+    ".........o...o...o...o...ooooo..........",
+    ".........o...o...o...o...o..............",
+    "..........ooo.....ooo....o..............",
+    "........................................",
+    "........................................",
+    "........................................",
+    "........................................",
+    "........................................",
+    "........................................",
+    "........................................",
+    "........................................",
+};
 int choice = 1;
 
 GLfloat BoxVerts[][3] = { // 바닥의 꼭짓점 좌표, 일종의 단위벡터로 바닥크기를 바꾸려면 CWALL의 생성자를 바꿔라
@@ -48,7 +85,7 @@ int cubeIndices[][4] = {
 };
 
 /* Viewer state */
-float sdepth = 20; //멀리서보는지 가까이서 보는지
+float sdepth = 30; //멀리서보는지 가까이서 보는지
 float zNear = 1.0, zFar = 100.0;
 float aspect = 5.0 / 4.0;
 long xsize, ysize;
@@ -68,11 +105,11 @@ void renderScene();
 
 
 enum State {
-	GAME_START,
-	LIFE_DECREASE,
-	GAME_PLAYING,
-	GAME_OVER,
-	GAME_CLEAR
+    GAME_START,
+    LIFE_DECREASE,
+    GAME_PLAYING,
+    GAME_OVER,
+    GAME_CLEAR
 };
 
 State statecode = GAME_START;
@@ -85,7 +122,7 @@ public:
    float color_r, color_g, color_b;
    float dir_x, dir_y, dir_z; // 공의 x, y, z축 성분 속도
    float speed;
-  
+
 
 
 public:
@@ -119,7 +156,7 @@ public:
     {
         float deltaX = center_x - ball.center_x;
         float deltaY = center_y - ball.center_y;
-        if (sqrt(deltaX * deltaX + deltaY * deltaY) <= 0.85)
+        if (sqrt(deltaX * deltaX + deltaY * deltaY) <= 2*radius_sphere)
             return true;
         else
             return false;
@@ -128,29 +165,28 @@ public:
 
    void hitBy(const CSphere hitSphere)
    {
-       float deltaX = hitSphere.center_x - center_x;
-       float deltaY = hitSphere.center_y - center_y;
-       float distance = sqrt(deltaX * deltaX + deltaY * deltaY);
+       // 구와 구끼리 충돌시 끼임 문제 해결 부분
+       // 구끼리 부딪혀서 방향이 바뀌었는데 끼어있으면, 현재 속도 반대 방향으로 x 성분과 y 성분의 위치를 끼임이 해결될 때까지 0.01씩 바꾼다.
+        while (hasIntersected(hitSphere)) {
+            center_x -= dir_x / sqrt(dir_x*dir_x + dir_y*dir_y) * 0.01;
+            center_y -= dir_y / sqrt(dir_x*dir_x + dir_y*dir_y) * 0.01;
+        }
+        float deltaX = hitSphere.center_x - center_x;
+        float deltaY = hitSphere.center_y - center_y;
+        float distance = sqrt(deltaX * deltaX + deltaY * deltaY);
        
-       // Rodrigues' rotation formula 사용
-       // V(rot) = -v + 2(k inner_product v)k
-       float k_x = deltaX / distance;
-       float k_y = deltaY / distance;
-       float v_x = -dir_x;
-       float v_y = -dir_y;
-       float inner_product = k_x * v_x + k_y * v_y;
+        // Rodrigues' rotation formula 사용
+        // V(rot) = -v + 2(k inner_product v)k
+        float k_x = deltaX / distance;
+        float k_y = deltaY / distance;
+        float v_x = -dir_x;
+        float v_y = -dir_y;
+        float inner_product = k_x * v_x + k_y * v_y;
        
-       dir_x = -v_x + 2 * inner_product * k_x;
-       dir_y = -v_y + 2 * inner_product * k_y;
+        dir_x = -v_x + 2 * inner_product * k_x;
+        dir_y = -v_y + 2 * inner_product * k_y;
 
-      // 구와 구끼리 충돌시 끼임 문제 해결 부분
-      // 구끼리 부딪혀서 방향이 바뀌었는데 끼어있으면, 반사 속도 방향으로 x 성분과 y 성분의 위치를 끼임이 해결될 때까지 0.1씩 바꾼다.
-      while (hasIntersected(hitSphere)) {
-          center_x += dir_x / sqrt(dir_x*dir_x + dir_y*dir_y) * 0.1;
-          center_y += dir_y / sqrt(dir_x*dir_x + dir_y*dir_y) * 0.1;
-      }
 
-      
    }
    void draw()
    {
@@ -159,13 +195,12 @@ public:
       glMultMatrixd(m_mRotate); // 마우스 이동에따라 motion콜백함수에서 m_mrotate행렬이 변형되는데 이 mult함수로 단위행렬에 곱하여 m_mrotate대로 회전한다.
       glTranslated(center_x, center_y, center_z); // 중앙으로 이동한다.
       glColor3f(color_r, color_g, color_b); //색 조정
-      glutSolidSphere(0.5, 20, 16); //0.5의 반지름 나머지 두 인자는 구를 나타내는 경선과 위선
+      glutSolidSphere(radius_sphere, 20, 16); //radius_sphere의 반지름 나머지 두 인자는 구를 나타내는 경선과 위선
    }
 };
 
 class CWall // 추가해야함 CSphere에서 상속
 {
-
 public:
    float width, height, depth;
    float center_x, center_y, center_z;
@@ -269,30 +304,26 @@ public:
    // 윗 방향 벽과 충돌 감지
    bool hasUpIntersected(CSphere* sphere)
    {
-      if (sphere->center_y + 0.5 >= planeHeight / 2)
+      if (sphere->center_y + radius_sphere >= planeHeight / 2)
          return (true);
       return (false);
    }
 
    // 아래 방향 벽과 충돌 감지
-   bool hasDownIntersected(CSphere* sphere) {
-      if (sphere->center_y - 0.5 <= -1 * planeHeight / 2)
+   bool hasDownIntersected(CSphere* sphere, CSphere* control_sphere) {
+      if (sphere->center_y - radius_sphere <= -1 * planeHeight / 2)
       {
+          Life -= 1; //아래 벽과 닿으면 Life가 깎임
+          statecode = LIFE_DECREASE;
+          sphere->center_x = hit_sphere_init_x;
+          sphere->center_y = hit_sphere_init_y;
+          sphere->center_z = 0.0;
 
+          sphere->dir_x = 0.0;
+          sphere->dir_y = 0.0;
+          sphere->dir_z = 0.0;
 
-		  Life -= 1; //아래 벽과 닿으면 Life가 깎임
-		  statecode = LIFE_DECREASE;
-		  sphere->center_x = 0.0;
-		  sphere->center_y = -6.0;
-		  sphere->center_z = 0.0;
-
-		  sphere[1].center_x = 0.0;
-		  sphere[1].center_y = -8.0;
-		  sphere[1].center_z = 0.0;
-
-		  sphere->dir_x = 0.0;
-		  sphere->dir_y = 0.0;
-		  sphere->dir_z = 0.0;
+          control_sphere->setCenter(control_sphere_init_x , control_sphere_init_y, 0.0); //하얀공
           return (true);
       }
       return (false);
@@ -300,7 +331,7 @@ public:
 
    // 왼쪽 방향 벽과 충돌 감지
    bool hasLeftIntersected(CSphere* sphere) {
-      if (sphere->center_x - 0.5 <= -1 * planeWidth / 2)
+      if (sphere->center_x - radius_sphere <= -1 * planeWidth / 2)
          return (true);
       return (false);
    }
@@ -308,13 +339,13 @@ public:
    // 오른쪽 방향 벽과 충돌 감지
    bool hasRightIntersected(CSphere* sphere)
    {
-      if (sphere->center_x + 0.5 >= planeWidth / 2)
+      if (sphere->center_x + radius_sphere >= planeWidth / 2)
          return (true);
       return (false);
    }
 
 
-   void hitBy(CSphere* sphere)
+   void hitBy(CSphere* sphere, CSphere* control_sphere)
    {
       if (hasUpIntersected(sphere))
       {
@@ -326,16 +357,16 @@ public:
             sphere->center_y -= 0.1;
          }
       }
-      else if (hasDownIntersected(sphere)) {
+      else if (hasDownIntersected(sphere, control_sphere)) {
          sphere->dir_y = -(sphere->dir_y);
 
          // 구와 벽끼리 충돌시 끼임 문제 해결 부분
          // 구와 벽이 부딪혀서 구의 방향이 바뀌었는데 끼어있으면, 반사 방향으로 x 성분과 y 성분의 위치를 끼임이 해결될 때까지 0.1씩 바꾼다.
-         while (hasDownIntersected(sphere)) {
+         while (hasDownIntersected(sphere, control_sphere)) {
             sphere->center_y += 0.1;
-           
+
          }
-		  
+
 
       }
       else if (hasLeftIntersected(sphere))
@@ -359,12 +390,10 @@ public:
          }
       }
    }
-
-
 };
 
-
-CSphere g_sphere[NO_SPHERE]; // 공 배열
+CSphere control_sphere, hit_sphere; // 조작하는 흰 구, 반사되는 빨간구
+CSphere target_sphere[NO_SPHERE]; // 맞춰야 하는 타겟 파란 공의 개수 최대 NO_SPHERE 개수만큼 존재
 CWall g_wall(planeWidth, planeHeight, planeDepth); // 바닥 평면
 CWall boundary_wall[4]; // 가장자리 벽
 
@@ -423,28 +452,30 @@ void DisplayCallback(void)
 
 
 
-   for (i = 0; i < NO_SPHERE; i++) {
-       
-           g_sphere[i].draw(); //공 그리기
-       
+   for (i = 0; i < cnt_placed_sphere; i++) {
+
+           target_sphere[i].draw(); //공 그리기
+
    }
+    control_sphere.draw(); // 하얀 구 묶음 그리기
+    hit_sphere.draw(); // 빨간 구 그리기
    g_wall.draw(); // 벽 그리기
-   for (int i = 0; i < 4; i++) boundary_wall[i].draw(); // boundary_wall 그리기
+   for (int i = 0; i < 4; i++) if(i != 1) boundary_wall[i].draw(); // 아래 벽 제외하고 boundary_wall 그리기
 
    renderBitmapCharacter(-10, 3.8, -5, GLUT_BITMAP_TIMES_ROMAN_24, (char*)((("Score : ")+std::to_string(Score)).c_str()));
-   renderBitmapCharacter(15, 3.8, -5, GLUT_BITMAP_TIMES_ROMAN_24, (char*)((("Life : ") + std::to_string(Life)).c_str()));
+   renderBitmapCharacter(45, 3.8, -5, GLUT_BITMAP_TIMES_ROMAN_24, (char*)((("Life : ") + std::to_string(Life)).c_str()));
    if (statecode==GAME_START||statecode==LIFE_DECREASE) {
-       renderBitmapCharacter(2.8, -3, 5, GLUT_BITMAP_TIMES_ROMAN_24, (char*)"Space To Start"); //지금 설정이 space 누르면 멈췄다  시작하는거라 오류가 있는데 그 기능 없애면 괜찮을듯?
+       renderBitmapCharacter(17, -8, 10, GLUT_BITMAP_TIMES_ROMAN_24, (char*)"Space To Start"); //지금 설정이 space 누르면 멈췄다  시작하는거라 오류가 있는데 그 기능 없애면 괜찮을듯?
    }
 
    if (Life == 0) { //Life가 0이되면 gameover
-	   renderBitmapCharacter(2.8, -3, 5, GLUT_BITMAP_TIMES_ROMAN_24, (char*)"YOU FAILED");
-	   statecode = GAME_OVER;
+       renderBitmapCharacter(17, -8, 5, GLUT_BITMAP_TIMES_ROMAN_24, (char*)"YOU FAILED");
+       statecode = GAME_OVER;
    }
 
-   if (Score == NO_SPHERE-2) { //Score가 NO_SPHERE-2여야 모든 공을맞춘 것, 테스트할때는 20을 빼는등 큰 수를 빼야할듯
-	   renderBitmapCharacter(2.8, -3, 5, GLUT_BITMAP_TIMES_ROMAN_24, (char*)"YOU WIN");
-	   statecode = GAME_CLEAR;
+   if (Score == cnt_placed_sphere) { //Score가 cnt_placed_sphere 여야 모든 공을맞춘 것, 테스트할때는 20을 빼는등 큰 수를 빼야할듯
+       renderBitmapCharacter(17, -8, 5, GLUT_BITMAP_TIMES_ROMAN_24, (char*)"YOU WIN");
+       statecode = GAME_CLEAR;
    }
 
    glutSwapBuffers(); // front버퍼와 back버퍼를 swapping 하기 위한것, 프론트버퍼내용이 화면에 뿌려지는 동안 새로운 내용이 백버퍼에 쓰이고 백버퍼에 기록이 다 되면 프론트와 백이 바뀐다.
@@ -456,32 +487,32 @@ void DisplayCallback(void)
 
 void KeyboardCallback(unsigned char ch, int x, int y)
 {
-	switch (ch)
-	{
+    switch (ch)
+    {
 
-	case 32: {//스페이스바
+    case 32: {//스페이스바
 
-		switch (statecode) {
-		case GAME_START: {
-			g_sphere[0].dir_x = 0.0; //sphere[0]은 스페이스를 누르면 움직이는 빨간 공
-			g_sphere[0].dir_y = 3.0;
-			g_sphere[0].dir_z = 0.0;
-			statecode = GAME_PLAYING;
-		}
-		case LIFE_DECREASE: {
-			g_sphere[0].dir_x = 0.0; //sphere[0]은 스페이스를 누르면 움직이는 빨간 공
-			g_sphere[0].dir_y = 3.0;
-			g_sphere[0].dir_z = 0.0;
-			statecode = GAME_PLAYING;
-		}
-		default: {
-			//doing nothing
-		}
+        switch (statecode) {
+        case GAME_START: {
+            hit_sphere.dir_x = 0.0; //sphere[0]은 스페이스를 누르면 움직이는 빨간 공
+            hit_sphere.dir_y = 3.0;
+            hit_sphere.dir_z = 0.0;
+            statecode = GAME_PLAYING;
+        }
+        case LIFE_DECREASE: {
+            hit_sphere.dir_x = 0.0; //sphere[0]은 스페이스를 누르면 움직이는 빨간 공
+            hit_sphere.dir_y = 3.0;
+            hit_sphere.dir_z = 0.0;
+            statecode = GAME_PLAYING;
+        }
+        default: {
+            //doing nothing
+        }
 
 
-		}
-		break;
-	}
+        }
+        break;
+    }
    case 27: //ESC키
       exit(0);
       break;
@@ -501,88 +532,64 @@ void MouseCallback(int button, int state, int x, int y)
 
 void InitObjects()
 {
-	// specify initial colors and center positions of each spheres
-	g_sphere[0].setColor(0.8, 0.2, 0.2); g_sphere[0].setCenter(0.0, -6.0, 0.0); //빨간공
-	g_sphere[1].setColor(0.8, 0.8, 0.8); g_sphere[1].setCenter(0.0, -8.0, 0.0); //하얀공
-	g_sphere[2].setColor(0.2, 0.2, 0.8); g_sphere[2].setCenter(0.0, 0.0, 0.0); //이하 표적공
-	g_sphere[3].setColor(0.2, 0.2, 0.8); g_sphere[3].setCenter(1.3, 0.0, 0.0);
-	g_sphere[4].setColor(0.2, 0.2, 0.8); g_sphere[4].setCenter(2.6, 0.0, 0.0);
-	g_sphere[5].setColor(0.2, 0.2, 0.8); g_sphere[5].setCenter(3.9, 1.0, 0.0);
-	g_sphere[6].setColor(0.2, 0.2, 0.8); g_sphere[6].setCenter(3.9, 2.3, 0.0);
-	g_sphere[7].setColor(0.2, 0.2, 0.8); g_sphere[7].setCenter(3.9, 3.6, 0.0);
-	g_sphere[8].setColor(0.2, 0.2, 0.8); g_sphere[8].setCenter(3.9, 4.9, 0.0);
-	g_sphere[9].setColor(0.2, 0.2, 0.8); g_sphere[9].setCenter(3.9, 6.2, 0.0);
-	g_sphere[18].setColor(0.2, 0.2, 0.8); g_sphere[18].setCenter(3.9, 7.5, 0.0);
-	g_sphere[10].setColor(0.2, 0.2, 0.8); g_sphere[10].setCenter(2.6, 8.5, 0.0);
-	g_sphere[11].setColor(0.2, 0.2, 0.8); g_sphere[11].setCenter(1.3, 8.5, 0.0);
-	g_sphere[12].setColor(0.2, 0.2, 0.8); g_sphere[12].setCenter(0.0, 8.5, 0.0);
-	g_sphere[13].setColor(0.2, 0.2, 0.8); g_sphere[13].setCenter(-1.3, 8.5, 0.0);
-	g_sphere[14].setColor(0.2, 0.2, 0.8); g_sphere[14].setCenter(-2.6, 8.5, 0.0);
-	g_sphere[15].setColor(0.2, 0.2, 0.8); g_sphere[15].setCenter(-3.9, 7.5, 0.0);
-	g_sphere[16].setColor(0.2, 0.2, 0.8); g_sphere[16].setCenter(-3.9, 6.2, 0.0);
-	g_sphere[17].setColor(0.2, 0.2, 0.8); g_sphere[17].setCenter(-3.9, 4.9, 0.0);
-	g_sphere[19].setColor(0.2, 0.2, 0.8); g_sphere[19].setCenter(-3.9, 3.6, 0.0);
-	g_sphere[20].setColor(0.2, 0.2, 0.8); g_sphere[20].setCenter(-3.9, 2.3, 0.0);
-	g_sphere[21].setColor(0.2, 0.2, 0.8); g_sphere[21].setCenter(-3.9, 1.0, 0.0);
-	g_sphere[22].setColor(0.2, 0.2, 0.8); g_sphere[22].setCenter(-2.6, 0.0, 0.0);
-	g_sphere[23].setColor(0.2, 0.2, 0.8); g_sphere[23].setCenter(-1.3, 0.0, 0.0);
-	g_sphere[24].setColor(0.2, 0.2, 0.8); g_sphere[24].setCenter(1.5, 6.0, 0.0);
-	g_sphere[25].setColor(0.2, 0.2, 0.8); g_sphere[25].setCenter(-1.5, 6.0, 0.0);
-	g_sphere[26].setColor(0.2, 0.2, 0.8); g_sphere[26].setCenter(0.0, 2.0, 0.0);
-	g_sphere[27].setColor(0.2, 0.2, 0.8); g_sphere[27].setCenter(-1.3, 2.0, 0.0);
-	g_sphere[28].setColor(0.2, 0.2, 0.8); g_sphere[28].setCenter(1.3, 2.0, 0.0);
-	g_sphere[29].setColor(0.2, 0.2, 0.8); g_sphere[29].setCenter(2.0, 3.0, 0.0);
-	g_sphere[30].setColor(0.2, 0.2, 0.8); g_sphere[30].setCenter(-2.0, 3.0, 0.0);
-	g_sphere[31].setColor(0.2, 0.2, 0.8); g_sphere[31].setCenter(0.0, 4.2, 0.0);
+    // specify initial colors and center positions of each spheres
+    hit_sphere.setColor(0.8, 0.2, 0.2); hit_sphere.setCenter(hit_sphere_init_x, hit_sphere_init_y, 0.0); //빨간공
+    control_sphere.setColor(0.8, 0.8, 0.8); control_sphere.setCenter(control_sphere_init_x, control_sphere_init_y, 0.0); //하얀공
+    
+    // 파란색 target_sphere 구 배치
+    cnt_placed_sphere = 0;
+    for(int i = 0; i < planeHeight; i++){
+        for(int j = 0; j < planeWidth; j++){
+            if(sphere_place[i][j] != '.'){
+                target_sphere[cnt_placed_sphere].dir_x = 1;
+                target_sphere[cnt_placed_sphere].setColor(0.2, 0.2, 0.8);
+                target_sphere[cnt_placed_sphere++].setCenter(-planeWidth/2 + j + radius_sphere, planeHeight/2 - i - radius_sphere, 0);
+            }
+        }
+    }
 
-	// specify initial colors and center positions of a wall
-	g_wall.setColor(0.0, 1.0, 0.0); g_wall.setCenter(0.0, 0.0, -0.6);
+    // specify initial colors and center positions of a wall
+    g_wall.setColor(0.0, 1.0, 0.0); g_wall.setCenter(0.0, 0.0, -0.6);
 
-	boundary_wall[0].setSize(planeWidth, 0.1, 1);
-	boundary_wall[0].setColor(0.0, 0.0, 0.0);
-	boundary_wall[1].setSize(planeWidth, 0.1, 1);
-	boundary_wall[1].setColor(0.0, 0.0, 0.0);
-	boundary_wall[2].setSize(0.1, planeHeight, 1);
-	boundary_wall[2].setColor(0.0, 0.0, 0.0);
-	boundary_wall[3].setSize(0.1, planeHeight, 1);
-	boundary_wall[3].setColor(0.0, 0.0, 0.0);
+    boundary_wall[0].setSize(planeWidth, 0.1, 3);
+    boundary_wall[0].setColor(0.5882, 0.2941, 0.0);
+    boundary_wall[1].setSize(planeWidth, 0.1, 3);
+    boundary_wall[1].setColor(0.5882, 0.2941, 0.0);
+    boundary_wall[2].setSize(0.1, planeHeight, 3);
+    boundary_wall[2].setColor(0.5882, 0.2941, 0.0);
+    boundary_wall[3].setSize(0.1, planeHeight, 3);
+    boundary_wall[3].setColor(0.5882, 0.2941, 0.0);
 
-	boundary_wall[0].setCenter(0.0, planeHeight / 2, 0.0); // 위쪽 가장자리 벽
-	boundary_wall[1].setCenter(0.0, -(planeHeight / 2), 0.0); // 아래쪽 가장자리 벽
-	boundary_wall[2].setCenter(planeWidth / 2, 0.0, 0.0); // 오른쪽 가장자리 벽
-	boundary_wall[3].setCenter(-(planeWidth / 2), 0.0, 0.0); // 왼쪽 가장자리 벽
+    boundary_wall[0].setCenter(0.0, planeHeight / 2, 0.0); // 위쪽 가장자리 벽
+    boundary_wall[1].setCenter(0.0, -(planeHeight / 2), 0.0); // 아래쪽 가장자리 벽
+    boundary_wall[2].setCenter(planeWidth / 2, 0.0, 0.0); // 오른쪽 가장자리 벽
+    boundary_wall[3].setCenter(-(planeWidth / 2), 0.0, 0.0); // 왼쪽 가장자리 벽
 
 }
 
 void MotionCallback(int x, int y) { // 구현이 다름
-   int tdx = x - downX, tdy = -(y - downY), tdz = 0, id = 0;
-   
+   int tdx = 2*(x - downX), tdy = -(y - downY), tdz = 0;
+
    if (rightButton) { // 붉은공의 위치변경, 이부분을 잘 만지면 arkanoid에서 흰색공 위치 조절 가능
       if (statecode==GAME_START||statecode==LIFE_DECREASE) //게임시작단계와 라이프가 깎인 단계에서는 하얀공과 빨간공이 같이 움직임
       {
-         if (id < NO_SPHERE)
-         {
-            g_sphere[id].setCenter(g_sphere[id].center_x + tdx / 100.0, g_sphere[id].center_y, 0);
-            g_sphere[id + 1].setCenter(g_sphere[id + 1].center_x + tdx / 100.0, g_sphere[id + 1].center_y, 0);
-         }
+            hit_sphere.setCenter(hit_sphere.center_x + tdx / 100.0, hit_sphere.center_y, 0);
+              control_sphere.setCenter(control_sphere.center_x + tdx / 100.0, control_sphere.center_y, 0);
       }
       else //다른 단계에서는 하얀공만 움직임
       {
-         if (id < NO_SPHERE)
-         {
-            g_sphere[id + 1].setCenter(g_sphere[id + 1].center_x + tdx / 100.0, g_sphere[id + 1].center_y, 0);
-         }
+            control_sphere.setCenter(control_sphere.center_x + tdx / 100.0, control_sphere.center_y, 0);
       }
 
    }
 
    if (leftButton) {
-	   if (statecode == GAME_OVER) {
-		   statecode = GAME_START;
-		   Life = 5;
-		   Score = 0;
-		   InitObjects();
-	   }
+       if (statecode == GAME_OVER) {
+           statecode = GAME_START;
+           Life = 5;
+           Score = 0;
+           InitObjects();
+       }
    }
 
    downX = x;   downY = y;
@@ -593,8 +600,10 @@ void initRotate() { // 구현이 살짝 다름 initGL에서 호출
 
    for (int i = 0; i < NO_SPHERE; i++)
    {
-      g_sphere[i].init();
+      target_sphere[i].init();
    }
+    hit_sphere.init();
+    control_sphere.init();
 
    g_wall.init();
    for (int i = 0; i < 4; i++) boundary_wall[i].init();
@@ -604,8 +613,8 @@ void initRotate() { // 구현이 살짝 다름 initGL에서 호출
 void InitGL() {
    //opengl의 기본 설정값
    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH); // 깊이버퍼가 있고 rgb색상버퍼가 있는 이중버퍼창의 모드를 설정
-   glutInitWindowSize(1024, 768);
-   glutCreateWindow("OpenGL Applications"); // Displaymode에서 설정한 버퍼대로 창을 띄워라
+   glutInitWindowSize(1200, 800);
+   glutCreateWindow("OOP_TEAM12_PRJ3_ARKANOID"); // Displaymode에서 설정한 버퍼대로 창을 띄워라
    glEnable(GL_DEPTH_TEST);
    glDepthFunc(GL_LEQUAL);
    glClearColor(0.7, 0.7, 0.7, 0.0);
@@ -648,44 +657,73 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
    if (previousTime == -1) timeDelta = 0;
    else timeDelta = (currentTime - previousTime) / 2;
 
-   float x = g_sphere[0].center_x;
-   float y = g_sphere[0].center_y;
-   float z = g_sphere[0].center_z;
+   float x = hit_sphere.center_x;
+   float y = hit_sphere.center_y;
+   float z = hit_sphere.center_z;
 
    if (statecode == GAME_PLAYING) {
-	   g_sphere[0].setCenter(
-		   x + timeDelta * 0.008 * g_sphere[0].dir_x, // 속도의 성분이 1일때, 구는 timeDelta 당 0.002만큼 움직인다.
-		   y + timeDelta * 0.008 * g_sphere[0].dir_y,
-		   z + timeDelta * 0.008 * g_sphere[0].dir_z);
+       x = hit_sphere.center_x;
+       y = hit_sphere.center_y;
+       z = hit_sphere.center_z;
+       hit_sphere.setCenter(
+           x + timeDelta * 0.008 * hit_sphere.dir_x, // 속도의 성분이 1일때, 구는 timeDelta 당 0.002만큼 움직인다.
+           y + timeDelta * 0.008 * hit_sphere.dir_y,
+           z + timeDelta * 0.008 * hit_sphere.dir_z);
+       
+       for(int i = 0; i < cnt_placed_sphere; i++){
+           x = target_sphere[i].center_x;
+           y = target_sphere[i].center_y;
+           z = target_sphere[i].center_z;
+           target_sphere[i].setCenter(
+               x + timeDelta * 0.008 * target_sphere[i].dir_x,
+               y + timeDelta * 0.008 * target_sphere[i].dir_y,
+               z + timeDelta * 0.008 * target_sphere[i].dir_z);
+       }
    }
    glutPostRedisplay(); // 윈도우를 다시그리도록 요청, 바로 디스플레이콜백함수(renderscene)가 호출되진 않고 메인루프(아마 glutMainloop?)에서 호출시점을 결정한다. 이게 없으면 연결이 부자연스러움
 
    // renderScene에서 공 사이의 충돌을 처리하는 부분
    // 공이 닿는 지점을 검사하고, 닿았을 경우 반사를 실행
-   int idx;
-   idx = 1;
-   while (idx < NO_SPHERE) {
-      if (g_sphere[0].hasIntersected(g_sphere[idx]) == true)
-      {
-            g_sphere[0].hitBy(g_sphere[idx]);
-            if (idx != 1) { //하얀공 말고 다른공 맞으면 점수 추가
-               
-                g_sphere[idx].setCenter(500, 500, 500); //닿은 공은 멀리 유배보냄
-                Score += 1;
-            }
-      }
-      idx++;
-   }
+    if (hit_sphere.hasIntersected(control_sphere) == true) // hit_sphere인 빨간공과 control_sphere인 흰공과의 충돌 감지
+    {
+        hit_sphere.hitBy(control_sphere);
+    }
+    
+    for(int i = 0; i < cnt_placed_sphere; i++){
+        if (hit_sphere.hasIntersected(target_sphere[i]) == true) // hit_sphere인 빨간공과 target_sphere[]인 파란공들과의 충돌 감지
+        {
+            hit_sphere.hitBy(target_sphere[i]); // 우선은 빨간공 흰공 충돌만 처리 나중에 다른 공들도 넣기
+            target_sphere[i].setCenter(0, 500, 500); //닿은 공은 멀리 유배보냄
+            target_sphere[i].dir_x = 0;
+            Score += 1;
+            break;
+        }
+    }
 
    // 벽에 대한 반사 실행, 다른 사람 코드 그대로 가져옴
-   g_wall.hitBy(&g_sphere[0]);
-   g_wall.hitBy(&g_sphere[1]);
+    g_wall.hitBy(&hit_sphere, &control_sphere);
+    g_wall.hitBy(&control_sphere, &control_sphere);
+    
+    for(int i = 0; i < cnt_placed_sphere; i++){
+        if(g_wall.hasLeftIntersected(&target_sphere[i]) || g_wall.hasRightIntersected(&target_sphere[i])){
+            
+            while (g_wall.hasLeftIntersected(&target_sphere[i])) {
+                for(int j = 0; j < cnt_placed_sphere; j++)
+                    target_sphere[j].center_x += 0.1;
+            }
+            while (g_wall.hasRightIntersected(&target_sphere[i])) {
+                for(int j = 0; j < cnt_placed_sphere; j++)
+                    target_sphere[j].center_x -= 0.1;
+            }
+            for(int i = 0; i < cnt_placed_sphere; i++){
+                target_sphere[i].dir_x = -target_sphere[i].dir_x;
+            }
+            break;
+        }
+    }
 
    previousTime = currentTime;
-  //std::cout << g_sphere[0].center_x << ' ' << g_sphere[0].center_y << ' ' << g_sphere[0].center_z << '\n'; //정체불명의 윤활유
 }
-
-
 
 // 추가해야함 using namespace std;
 int main(int argc, char** argv)
@@ -696,3 +734,5 @@ int main(int argc, char** argv)
    glutMainLoop(); // 이벤트 루프를 돌리는것, 이벤트별로 콜백함수 등록을 마쳤으니 이벤트 루프로 진입하라.
    return 0;
 }
+
+
