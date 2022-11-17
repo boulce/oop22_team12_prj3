@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <string>
-#include <GLUT/glut.h>
+#include <GL/glut.h>
 
 const float planeWidth = 40; // plane 가로
 const float planeHeight = 30; // plane 세로
@@ -97,6 +97,8 @@ int displayMenu, mainMenu;
 
 int Score = 0;
 int Life = 5;
+GLboolean leftPressed = false;
+GLboolean rightPressed = false;
 
 void MyIdleFunc(void) { glutPostRedisplay(); } /* things to do while idle */
 void RunIdleFunc(void) { glutIdleFunc(MyIdleFunc); }
@@ -397,6 +399,46 @@ CSphere target_sphere[NO_SPHERE]; // 맞춰야 하는 타겟 파란 공의 개�
 CWall g_wall(planeWidth, planeHeight, planeDepth); // 바닥 평면
 CWall boundary_wall[4]; // 가장자리 벽
 
+
+void InitObjects()
+{
+	// specify initial colors and center positions of each spheres
+	hit_sphere.setColor(0.8, 0.2, 0.2); hit_sphere.setCenter(hit_sphere_init_x, hit_sphere_init_y, 0.0); //빨간공
+	control_sphere.setColor(0.8, 0.8, 0.8); control_sphere.setCenter(control_sphere_init_x, control_sphere_init_y, 0.0); //하얀공
+
+	// 파란색 target_sphere 구 배치
+	cnt_placed_sphere = 0;
+	for (int i = 0; i < planeHeight; i++) {
+		for (int j = 0; j < planeWidth; j++) {
+			if (sphere_place[i][j] != '.') {
+				target_sphere[cnt_placed_sphere].dir_x = 1;
+				target_sphere[cnt_placed_sphere].setColor(0.2, 0.2, 0.8);
+				target_sphere[cnt_placed_sphere++].setCenter(-planeWidth / 2 + j + radius_sphere, planeHeight / 2 - i - radius_sphere, 0);
+			}
+		}
+	}
+
+	// specify initial colors and center positions of a wall
+	g_wall.setColor(0.0, 1.0, 0.0); g_wall.setCenter(0.0, 0.0, -0.6);
+
+	boundary_wall[0].setSize(planeWidth, 0.1, 3);
+	boundary_wall[0].setColor(0.5882, 0.2941, 0.0);
+	boundary_wall[1].setSize(planeWidth, 0.1, 3);
+	boundary_wall[1].setColor(0.5882, 0.2941, 0.0);
+	boundary_wall[2].setSize(0.1, planeHeight, 3);
+	boundary_wall[2].setColor(0.5882, 0.2941, 0.0);
+	boundary_wall[3].setSize(0.1, planeHeight, 3);
+	boundary_wall[3].setColor(0.5882, 0.2941, 0.0);
+
+	boundary_wall[0].setCenter(0.0, planeHeight / 2, 0.0); // 위쪽 가장자리 벽
+	boundary_wall[1].setCenter(0.0, -(planeHeight / 2), 0.0); // 아래쪽 가장자리 벽
+	boundary_wall[2].setCenter(planeWidth / 2, 0.0, 0.0); // 오른쪽 가장자리 벽
+	boundary_wall[3].setCenter(-(planeWidth / 2), 0.0, 0.0); // 왼쪽 가장자리 벽
+
+}
+
+
+
 void ReshapeCallback(int width, int height)
 {
 
@@ -457,6 +499,7 @@ void DisplayCallback(void)
            target_sphere[i].draw(); //공 그리기
 
    }
+   
     control_sphere.draw(); // 하얀 구 묶음 그리기
     hit_sphere.draw(); // 빨간 구 그리기
    g_wall.draw(); // 벽 그리기
@@ -473,8 +516,9 @@ void DisplayCallback(void)
        statecode = GAME_OVER;
    }
 
-   if (Score == cnt_placed_sphere) { //Score가 cnt_placed_sphere 여야 모든 공을맞춘 것, 테스트할때는 20을 빼는등 큰 수를 빼야할듯
-       renderBitmapCharacter(17, -8, 5, GLUT_BITMAP_TIMES_ROMAN_24, (char*)"YOU WIN");
+   if (Score >= cnt_placed_sphere-120) { //Score가 cnt_placed_sphere==127 여야 모든 공을맞춘 것, 테스트할때는 20을 빼는등 큰 수를 빼야할듯
+       renderBitmapCharacter(17, -8, 5, GLUT_BITMAP_TIMES_ROMAN_24, (char*)"YOU WIN 'r' to regame");
+	  
        statecode = GAME_CLEAR;
    }
 
@@ -489,6 +533,16 @@ void KeyboardCallback(unsigned char ch, int x, int y)
 {
     switch (ch)
     {
+
+	case 'r': {
+		if (statecode == GAME_CLEAR) {
+			statecode = GAME_START;
+			Life = 5;
+			Score = 0;
+			InitObjects();
+		}
+	}
+
 
     case 32: {//스페이스바
 
@@ -513,12 +567,36 @@ void KeyboardCallback(unsigned char ch, int x, int y)
         }
         break;
     }
-   case 27: //ESC키
-      exit(0);
-      break;
+	case 27: {//ESC키
+		exit(0);
+		break;
+	}
+
+
    }
 
    glutPostRedisplay();
+}
+
+void SpecialCallback(int key, int x, int y) {
+	
+	if (GLUT_KEY_LEFT == key) {
+		leftPressed = true;
+	}
+	if (GLUT_KEY_RIGHT == key) {
+		rightPressed = true;
+	}
+
+
+}
+
+void SpecialUpCallback(int key, int x, int y) {
+	if (GLUT_KEY_LEFT == key) {
+		leftPressed = false;
+	}
+	if (GLUT_KEY_RIGHT == key) {
+		rightPressed = false;
+	}
 }
 
 void MouseCallback(int button, int state, int x, int y)
@@ -530,71 +608,6 @@ void MouseCallback(int button, int state, int x, int y)
    glutPostRedisplay();
 }
 
-void InitObjects()
-{
-    // specify initial colors and center positions of each spheres
-    hit_sphere.setColor(0.8, 0.2, 0.2); hit_sphere.setCenter(hit_sphere_init_x, hit_sphere_init_y, 0.0); //빨간공
-    control_sphere.setColor(0.8, 0.8, 0.8); control_sphere.setCenter(control_sphere_init_x, control_sphere_init_y, 0.0); //하얀공
-    
-    // 파란색 target_sphere 구 배치
-    cnt_placed_sphere = 0;
-    for(int i = 0; i < planeHeight; i++){
-        for(int j = 0; j < planeWidth; j++){
-            if(sphere_place[i][j] != '.'){
-                target_sphere[cnt_placed_sphere].dir_x = 1;
-                target_sphere[cnt_placed_sphere].setColor(0.2, 0.2, 0.8);
-                target_sphere[cnt_placed_sphere++].setCenter(-planeWidth/2 + j + radius_sphere, planeHeight/2 - i - radius_sphere, 0);
-            }
-        }
-    }
-
-    // specify initial colors and center positions of a wall
-    g_wall.setColor(0.0, 1.0, 0.0); g_wall.setCenter(0.0, 0.0, -0.6);
-
-    boundary_wall[0].setSize(planeWidth, 0.1, 3);
-    boundary_wall[0].setColor(0.5882, 0.2941, 0.0);
-    boundary_wall[1].setSize(planeWidth, 0.1, 3);
-    boundary_wall[1].setColor(0.5882, 0.2941, 0.0);
-    boundary_wall[2].setSize(0.1, planeHeight, 3);
-    boundary_wall[2].setColor(0.5882, 0.2941, 0.0);
-    boundary_wall[3].setSize(0.1, planeHeight, 3);
-    boundary_wall[3].setColor(0.5882, 0.2941, 0.0);
-
-    boundary_wall[0].setCenter(0.0, planeHeight / 2, 0.0); // 위쪽 가장자리 벽
-    boundary_wall[1].setCenter(0.0, -(planeHeight / 2), 0.0); // 아래쪽 가장자리 벽
-    boundary_wall[2].setCenter(planeWidth / 2, 0.0, 0.0); // 오른쪽 가장자리 벽
-    boundary_wall[3].setCenter(-(planeWidth / 2), 0.0, 0.0); // 왼쪽 가장자리 벽
-
-}
-
-void MotionCallback(int x, int y) { // 구현이 다름
-   int tdx = 2*(x - downX), tdy = -(y - downY), tdz = 0;
-
-   if (rightButton) { // 붉은공의 위치변경, 이부분을 잘 만지면 arkanoid에서 흰색공 위치 조절 가능
-      if (statecode==GAME_START||statecode==LIFE_DECREASE) //게임시작단계와 라이프가 깎인 단계에서는 하얀공과 빨간공이 같이 움직임
-      {
-            hit_sphere.setCenter(hit_sphere.center_x + tdx / 100.0, hit_sphere.center_y, 0);
-              control_sphere.setCenter(control_sphere.center_x + tdx / 100.0, control_sphere.center_y, 0);
-      }
-      else //다른 단계에서는 하얀공만 움직임
-      {
-            control_sphere.setCenter(control_sphere.center_x + tdx / 100.0, control_sphere.center_y, 0);
-      }
-
-   }
-
-   if (leftButton) {
-       if (statecode == GAME_OVER) {
-           statecode = GAME_START;
-           Life = 5;
-           Score = 0;
-           InitObjects();
-       }
-   }
-
-   downX = x;   downY = y;
-   glutPostRedisplay();
-}
 
 void initRotate() { // 구현이 살짝 다름 initGL에서 호출
 
@@ -642,8 +655,9 @@ void InitGL() {
    // reshapeevent 가 발생하면 괄호안의 파라미터를통해 변경된 윈도우의 폭과 높이를 콜백함수로 전달한다. 그래서 width와 height를 그냥 받아서 쓰는듯.
    glutDisplayFunc(DisplayCallback); // 이 함수는 DisplayCallback이라는 함수를 디스플레이이벤트에 대한 콜백함수로 사용하는 함수, 매개변수로 전달한 함수는 디스플레이이벤트마다 호출된다.
    glutKeyboardFunc(KeyboardCallback); // 키보드가 눌렸을경우 작동하는 콜백함수
+   glutSpecialFunc(SpecialCallback); //방향키, F1~F12와 같은 특별한 키가 눌린 경우 작동하는 콜백함수
+   glutSpecialUpFunc(SpecialUpCallback); //방향키를 뗐을때 작동하는 콜백함수, 부드러운 움직임을 위해 추가
    glutMouseFunc(MouseCallback); // 마우스가 눌렸을경우 작동하는 콜백함수
-   glutMotionFunc(MotionCallback); // 버튼을 누른상태에서 마우스를 움직일때 작동하는 콜백함수, 아무런 버튼도 누르지 않은 상태에서 마우스를 움직이면 glutPassivemotionfunc이다.
 }
 
 
@@ -661,10 +675,62 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
    float y = hit_sphere.center_y;
    float z = hit_sphere.center_z;
 
+
+
+   if (leftPressed) { 
+	   
+	   if (statecode == GAME_START || statecode == LIFE_DECREASE) //게임시작단계와 라이프가 깎인 단계에서는 하얀공과 빨간공이 같이 움직임
+	   {
+		   hit_sphere.setCenter(hit_sphere.center_x -timeDelta*0.05, hit_sphere.center_y, 0);
+		   control_sphere.setCenter(control_sphere.center_x -timeDelta*0.05, control_sphere.center_y, 0);
+	   }
+	   else //다른 단계에서는 하얀공만 움직임
+	   {
+		   control_sphere.setCenter(control_sphere.center_x - timeDelta*0.05, control_sphere.center_y, 0);
+	   }
+	   
+   }
+
+   if (rightPressed) { 
+	   
+	   if (statecode == GAME_START || statecode == LIFE_DECREASE) //게임시작단계와 라이프가 깎인 단계에서는 하얀공과 빨간공이 같이 움직임
+	   {
+		   hit_sphere.setCenter(hit_sphere.center_x + timeDelta*0.05, hit_sphere.center_y, 0);
+		   control_sphere.setCenter(control_sphere.center_x + timeDelta*0.05, control_sphere.center_y, 0);
+	   }
+	   else //다른 단계에서는 하얀공만 움직임
+	   {
+		   control_sphere.setCenter(control_sphere.center_x + timeDelta*0.05, control_sphere.center_y, 0);
+	   }
+	   
+   }
+
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
    if (statecode == GAME_PLAYING) {
        x = hit_sphere.center_x;
        y = hit_sphere.center_y;
        z = hit_sphere.center_z;
+
        hit_sphere.setCenter(
            x + timeDelta * 0.008 * hit_sphere.dir_x, // 속도의 성분이 1일때, 구는 timeDelta 당 0.002만큼 움직인다.
            y + timeDelta * 0.008 * hit_sphere.dir_y,
