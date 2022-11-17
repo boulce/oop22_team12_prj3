@@ -511,12 +511,12 @@ void DisplayCallback(void)
        renderBitmapCharacter(17, -8, 10, GLUT_BITMAP_TIMES_ROMAN_24, (char*)"Space To Start"); //지금 설정이 space 누르면 멈췄다  시작하는거라 오류가 있는데 그 기능 없애면 괜찮을듯?
    }
 
-   if (Life == 0) { //Life가 0이되면 gameover
+   if (Life == -99999) { //Life가 0이되면 gameover
        renderBitmapCharacter(17, -8, 5, GLUT_BITMAP_TIMES_ROMAN_24, (char*)"YOU FAILED");
        statecode = GAME_OVER;
    }
 
-   if (Score >= cnt_placed_sphere-120) { //Score가 cnt_placed_sphere==127 여야 모든 공을맞춘 것, 테스트할때는 20을 빼는등 큰 수를 빼야할듯
+   if (Score >= cnt_placed_sphere) { //Score가 cnt_placed_sphere==127 여야 모든 공을맞춘 것, 테스트할때는 20을 빼는등 큰 수를 빼야할듯
        renderBitmapCharacter(17, -8, 5, GLUT_BITMAP_TIMES_ROMAN_24, (char*)"YOU WIN 'r' to regame");
 	  
        statecode = GAME_CLEAR;
@@ -540,6 +540,7 @@ void KeyboardCallback(unsigned char ch, int x, int y)
 			Life = 5;
 			Score = 0;
 			InitObjects();
+            break;
 		}
 	}
 
@@ -548,6 +549,7 @@ void KeyboardCallback(unsigned char ch, int x, int y)
 
         switch (statecode) {
         case GAME_START: {
+           
             hit_sphere.dir_x = 0.0; //sphere[0]은 스페이스를 누르면 움직이는 빨간 공
             hit_sphere.dir_y = 3.0;
             hit_sphere.dir_z = 0.0;
@@ -574,9 +576,11 @@ void KeyboardCallback(unsigned char ch, int x, int y)
 
 
    }
-
+   
    glutPostRedisplay();
 }
+
+
 
 void SpecialCallback(int key, int x, int y) {
 	
@@ -655,6 +659,7 @@ void InitGL() {
    // reshapeevent 가 발생하면 괄호안의 파라미터를통해 변경된 윈도우의 폭과 높이를 콜백함수로 전달한다. 그래서 width와 height를 그냥 받아서 쓰는듯.
    glutDisplayFunc(DisplayCallback); // 이 함수는 DisplayCallback이라는 함수를 디스플레이이벤트에 대한 콜백함수로 사용하는 함수, 매개변수로 전달한 함수는 디스플레이이벤트마다 호출된다.
    glutKeyboardFunc(KeyboardCallback); // 키보드가 눌렸을경우 작동하는 콜백함수
+  
    glutSpecialFunc(SpecialCallback); //방향키, F1~F12와 같은 특별한 키가 눌린 경우 작동하는 콜백함수
    glutSpecialUpFunc(SpecialUpCallback); //방향키를 뗐을때 작동하는 콜백함수, 부드러운 움직임을 위해 추가
    glutMouseFunc(MouseCallback); // 마우스가 눌렸을경우 작동하는 콜백함수
@@ -705,26 +710,7 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
 	   
    }
 
-   
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  
 
    if (statecode == GAME_PLAYING) {
        x = hit_sphere.center_x;
