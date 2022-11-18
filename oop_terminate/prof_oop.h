@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #define GL_SILENCE_DEPRECATION
 #include <math.h>
 #include <stdlib.h>
@@ -8,24 +8,24 @@
 
 
 // ------------------------------------------------------- v const for starting postion v -------------------------------------------------------
-const float planeWidth = 40; // plane °¡·Î
-const float planeHeight = 30; // plane ¼¼·Î
-const float planeDepth = 0.2; // plane µÎ²²
+const float planeWidth = 40; // plane ê°€ë¡œ
+const float planeHeight = 30; // plane ì„¸ë¡œ
+const float planeDepth = 0.2; // plane ë‘ê»˜
 const int WALL_ID = 1000;
 
-const int NO_SPHERE = planeWidth * planeHeight; // target_sphere[]ÀÇ ±¸ÀÇ ÃÖ´ë °³¼ö
-int cnt_placed_sphere = 0; // ¹èÄ¡¿¡ ÀÇÇØ ¸¸µé¾îÁö´Â ½ÇÁ¦ target_sphere[]ÀÇ ±¸ÀÇ °³¼ö
+const int NO_SPHERE = planeWidth * planeHeight; // target_sphere[]ì˜ êµ¬ì˜ ìµœëŒ€ ê°œìˆ˜
+int cnt_placed_sphere = 0; // ë°°ì¹˜ì— ì˜í•´ ë§Œë“¤ì–´ì§€ëŠ” ì‹¤ì œ target_sphere[]ì˜ êµ¬ì˜ ê°œìˆ˜
 const float radius_sphere = 0.5;
 
-const float control_sphere_init_x = 0; // ½ÃÀÛ ¶§, Èò °øÀÇ x ÁÂÇ¥
-const float control_sphere_init_y = -13.0; // ½ÃÀÛ ¶§, Èò °øÀÇ yÁÂÇ¥
+const float control_sphere_init_x = 0; // ì‹œì‘ ë•Œ, í° ê³µì˜ x ì¢Œí‘œ
+const float control_sphere_init_y = -13.0; // ì‹œì‘ ë•Œ, í° ê³µì˜ yì¢Œí‘œ
 
-const float hit_sphere_init_x = 0; // ½ÃÀÛ ¶§, »¡°£ °øÀÇ x ÁÂÇ¥
-const float hit_sphere_init_y = control_sphere_init_y + 2 * radius_sphere + 1; // ½ÃÀÛ ¶§ »¡°£ °øÀÇ y ÁÂÇ¥
+const float hit_sphere_init_x = 0; // ì‹œì‘ ë•Œ, ë¹¨ê°„ ê³µì˜ x ì¢Œí‘œ
+const float hit_sphere_init_y = control_sphere_init_y + 2 * radius_sphere + 1; // ì‹œì‘ ë•Œ ë¹¨ê°„ ê³µì˜ y ì¢Œí‘œ
 
 // ------------------------------------------------------- v arrays for convenience v -------------------------------------------------------
 
-const std::string sphere_place[30] = { // °¡·Î ±æÀÌ´Â planeWidth, ¼¼·Î ±æÀÌ´Â planeWidth; '.'ÀÌ¸é ºó ¹èÄ¡, '.'ÀÌ ¾Æ´Ï¸é °øÀ» ¹èÄ¡ÇÑ´Ù. ¿À·ù³ª±æ·¡ planeHeight==30À¸·Î ¹Ù²Ş
+const std::string sphere_place[30] = { // ê°€ë¡œ ê¸¸ì´ëŠ” planeWidth, ì„¸ë¡œ ê¸¸ì´ëŠ” planeWidth; '.'ì´ë©´ ë¹ˆ ë°°ì¹˜, '.'ì´ ì•„ë‹ˆë©´ ê³µì„ ë°°ì¹˜í•œë‹¤. ì˜¤ë¥˜ë‚˜ê¸¸ë˜ planeHeight==30ìœ¼ë¡œ ë°”ê¿ˆ
     "........................................",
     "........................................",
     "........o.....o..........o.....o........",
@@ -58,7 +58,7 @@ const std::string sphere_place[30] = { // °¡·Î ±æÀÌ´Â planeWidth, ¼¼·Î ±æÀÌ´Â pl
     "........................................",
 };
 
-GLfloat BoxVerts[][3] = { // ¹Ù´ÚÀÇ ²ÀÁşÁ¡ ÁÂÇ¥, ÀÏÁ¾ÀÇ ´ÜÀ§º¤ÅÍ·Î ¹Ù´ÚÅ©±â¸¦ ¹Ù²Ù·Á¸é CWALLÀÇ »ı¼ºÀÚ¸¦ ¹Ù²ã¶ó
+GLfloat BoxVerts[][3] = { // ë°”ë‹¥ì˜ ê¼­ì§“ì  ì¢Œí‘œ, ì¼ì¢…ì˜ ë‹¨ìœ„ë²¡í„°ë¡œ ë°”ë‹¥í¬ê¸°ë¥¼ ë°”ê¾¸ë ¤ë©´ CWALLì˜ ìƒì„±ìë¥¼ ë°”ê¿”ë¼
    {-1.0,-1.0,-1.0},
    {-1.0,-1.0,1.0},
    {-1.0,1.0,-1.0},
@@ -93,7 +93,7 @@ int cubeIndices[][4] = {
 
 // ------------------------------------------------------- v variables for viewer state v -------------------------------------------------------
 
-float sdepth = 30; //¸Ö¸®¼­º¸´ÂÁö °¡±îÀÌ¼­ º¸´ÂÁö
+float sdepth = 30; //ë©€ë¦¬ì„œë³´ëŠ”ì§€ ê°€ê¹Œì´ì„œ ë³´ëŠ”ì§€
 float zNear = 1.0, zFar = 100.0;
 float aspect = 5.0 / 4.0;
 long xsize, ysize;
@@ -125,7 +125,7 @@ class CSphere {
 private:
     float center_x, center_y, center_z;
     float color_r, color_g, color_b;
-    float dir_x, dir_y, dir_z; // °øÀÇ x, y, zÃà ¼ººĞ ¼Óµµ
+    float dir_x, dir_y, dir_z; // ê³µì˜ x, y, zì¶• ì„±ë¶„ ì†ë„
     float speed;
 
 public:
