@@ -156,7 +156,8 @@ private:
 
 public:
     GLdouble m_mRotate[16];
-    CWall(float w, float h, float d);
+    CWall(float w=0.0, float h=0.0, float d=0.0);
+   
     void init();
     void setSize(float x, float y, float z);
     void setCenter(float x, float y, float z);

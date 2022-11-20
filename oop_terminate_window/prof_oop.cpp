@@ -36,7 +36,7 @@ void CSphere::setColor(float r, float g, float b)
 	color_r = r; color_g = g; color_b = b;
 }
 
-// 수정되지 않은 다른 사람의 hasIntersected, 공이 끼지 않게 하려면 개선해야함
+
 bool  CSphere::hasIntersected(const CSphere& ball)
 {
 	float deltaX = center_x - ball.center_x;
@@ -89,7 +89,7 @@ void CSphere::draw()
 
 
 
-CWall::CWall(float w = 0.0, float h = 0.0, float d = 0.0)
+CWall::CWall(float w, float h, float d)
 {
 	width = w; height = h; depth = d;
 	color_r = 0.0; color_g = 1.0; color_b = 0.0;
@@ -105,6 +105,7 @@ CWall::CWall(float w = 0.0, float h = 0.0, float d = 0.0)
 		}
 	}
 }
+
 
 void CWall::init() //initGL에서 initrotate를 호출하고 거기서 호출됨
 { // openGL에서 행렬은 mode를 지정한 후, transelate, rotate등의 변환을 거치는데, 일반적으로 변환을 한 후 LoadIdentity로 초기화를 해줘야 한다. 안그러면 누적되니까.. 근데 이 방법 말고도
@@ -385,15 +386,15 @@ void DisplayCallback(void)
 	renderBitmapCharacter(-10, 3.8, -5, GLUT_BITMAP_TIMES_ROMAN_24, (char*)((("Score : ") + std::to_string(Score)).c_str()));
 	renderBitmapCharacter(45, 3.8, -5, GLUT_BITMAP_TIMES_ROMAN_24, (char*)((("Life : ") + std::to_string(Life)).c_str()));
 	if (statecode == GAME_START || statecode == LIFE_DECREASE) {
-		renderBitmapCharacter(17, -8, 10, GLUT_BITMAP_TIMES_ROMAN_24, (char*)"Space To Start"); //지금 설정이 space 누르면 멈췄다  시작하는거라 오류가 있는데 그 기능 없애면 괜찮을듯?
+		renderBitmapCharacter(17, -8, 10, GLUT_BITMAP_TIMES_ROMAN_24, (char*)"Space To Start"); 
 	}
 
-	if (Life == 4) { //Life가 0이되면 gameover
+	if (Life == 0) { //Life가 0이되면 gameover
 		renderBitmapCharacter(17, -8, 5, GLUT_BITMAP_TIMES_ROMAN_24, (char*)"YOU FAILED 'esc' to get out");
 		statecode = GAME_OVER;
 	}
 
-	if (Score >= cnt_placed_sphere - 120) { //Score가 cnt_placed_sphere==127 여야 모든 공을맞춘 것, 테스트할때는 20을 빼는등 큰 수를 빼야할듯
+	if (Score >= cnt_placed_sphere) { //Score가 cnt_placed_sphere==127 여야 모든 공을맞춘 것, 테스트할때는 120을 빼는등 큰 수를 빼야할듯
 		renderBitmapCharacter(17, -8, 5, GLUT_BITMAP_TIMES_ROMAN_24, (char*)"YOU WIN 'r' to regame");
 
 		statecode = GAME_CLEAR;
@@ -401,7 +402,7 @@ void DisplayCallback(void)
 
 	glutSwapBuffers(); // front버퍼와 back버퍼를 swapping 하기 위한것, 프론트버퍼내용이 화면에 뿌려지는 동안 새로운 내용이 백버퍼에 쓰이고 백버퍼에 기록이 다 되면 프론트와 백이 바뀐다.
 	//백버퍼에 그림을 다 그렸으면 전면버퍼와 통째로 교체한다. 전면과 후면이 일시에 교체되므로 백버퍼에 미리 준비해둔 그림이 나타난다.
- //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 빼도 상관없는듯?
+ 
 }
 
 
@@ -485,7 +486,7 @@ void SpecialUpCallback(int key, int x, int y) {
 
 
 
-void initRotate() { // 구현이 살짝 다름 initGL에서 호출
+void initRotate() { //initGL에서 호출
 
 	for (int i = 0; i < NO_SPHERE; i++)
 	{
@@ -538,8 +539,8 @@ void InitGL() {
 
 
 
-int currentTime, previousTime = -1; // 거기엔 없음
-void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호출되는 함수, glutidleFunc()에서 호출된다.
+int currentTime, previousTime = -1; 
+void renderScene() //  어플리케이션의 휴면시간에 호출되는 함수, glutidleFunc()에서 호출된다.
 {
 
 	int timeDelta;
@@ -589,7 +590,7 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
 		z = hit_sphere.center_z;
 
 		hit_sphere.setCenter(
-			x + timeDelta * 0.008 * hit_sphere.dir_x, // 속도의 성분이 1일때, 구는 timeDelta 당 0.002만큼 움직인다.
+			x + timeDelta * 0.008 * hit_sphere.dir_x, // 속도의 성분이 1일때, 구는 timeDelta 당 0.008만큼 움직인다.
 			y + timeDelta * 0.008 * hit_sphere.dir_y,
 			z + timeDelta * 0.008 * hit_sphere.dir_z);
 
@@ -623,7 +624,7 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
 		}
 	}
 
-	// 벽에 대한 반사 실행, 다른 사람 코드 그대로 가져옴
+	// 벽에 대한 반사 실행
 	g_wall.hitBy(&hit_sphere, &control_sphere);
 	g_wall.hitBy(&control_sphere, &control_sphere);
 
@@ -648,7 +649,7 @@ void renderScene() // 구현 다름, 어플리케이션의 휴면시간에 호�
 	previousTime = currentTime;
 }
 
-// 추가해야함 using namespace std;
+
 int main(int argc, char** argv)
 {
 	glutInit(&argc, argv); // glut 시작 초기화, 보통 그래픽못쓰는데서 한다거나 하면 오류 감지용
